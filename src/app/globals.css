@@ -1,26 +1,171 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --mpd-black: #0D1117;
+  --mpd-surface: #161B22;
+  --mpd-surface-hover: #1C2128;
+  --mpd-border: #30363D;
+  --mpd-border-light: #3D444D;
+  --mpd-gold: #C9A84C;
+  --mpd-gold-light: #D4B85A;
+  --mpd-gold-dark: #A88B3D;
+  --mpd-green: #00C875;
+  --mpd-green-dark: #00A35E;
+  --mpd-amber: #FF9500;
+  --mpd-red: #F85149;
+  --mpd-white: #E6EDF3;
+  --mpd-gray: #8B949E;
+  --mpd-gray-dark: #656D76;
+
+  --background: var(--mpd-black);
+  --foreground: var(--mpd-white);
+  --card: var(--mpd-surface);
+  --card-foreground: var(--mpd-white);
+  --popover: var(--mpd-surface);
+  --popover-foreground: var(--mpd-white);
+  --primary: var(--mpd-gold);
+  --primary-foreground: var(--mpd-black);
+  --secondary: var(--mpd-surface);
+  --secondary-foreground: var(--mpd-white);
+  --muted: var(--mpd-surface);
+  --muted-foreground: var(--mpd-gray);
+  --accent: var(--mpd-surface-hover);
+  --accent-foreground: var(--mpd-white);
+  --destructive: var(--mpd-red);
+  --destructive-foreground: var(--mpd-white);
+  --border: var(--mpd-border);
+  --input: var(--mpd-border);
+  --ring: var(--mpd-gold);
+  --radius: 0.75rem;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-mpd-black: #0D1117;
+  --color-mpd-surface: #161B22;
+  --color-mpd-surface-hover: #1C2128;
+  --color-mpd-border: #30363D;
+  --color-mpd-border-light: #3D444D;
+  --color-mpd-gold: #C9A84C;
+  --color-mpd-gold-light: #D4B85A;
+  --color-mpd-gold-dark: #A88B3D;
+  --color-mpd-green: #00C875;
+  --color-mpd-green-dark: #00A35E;
+  --color-mpd-amber: #FF9500;
+  --color-mpd-red: #F85149;
+  --color-mpd-white: #E6EDF3;
+  --color-mpd-gray: #8B949E;
+  --color-mpd-gray-dark: #656D76;
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  border-color: var(--border);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-body), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--mpd-black);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--mpd-border);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--mpd-border-light);
+}
+
+/* Selection */
+::selection {
+  background: rgba(201, 168, 76, 0.3);
+  color: var(--mpd-white);
+}
+
+/* Focus ring */
+*:focus-visible {
+  outline: 2px solid var(--mpd-gold);
+  outline-offset: 2px;
+}
+
+/* Glow effect for cards */
+.glow-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.glow-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    transparent 40%,
+    var(--mpd-gold) 50%,
+    transparent 60%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.glow-card:hover::before {
+  opacity: 1;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(201, 168, 76, 0.1) 50%,
+    transparent 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
 }
