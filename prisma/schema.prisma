@@ -1,0 +1,611 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// ENUMS
+// ============================================
+
+enum UserRole {
+  PLAYER
+  SUBAGENT
+  MODERATOR
+  ANALYST
+  TEACHER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum PlayerStratum {
+  NOVATO
+  SEMI_PRO
+  PROFESIONAL
+  REFERENTE
+}
+
+enum UserStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  BANNED
+  INACTIVE
+}
+
+enum RoomStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RakebackStatus {
+  PENDING
+  AVAILABLE
+  REDEEMED
+  WITHDRAWN
+  EXPIRED
+}
+
+enum TransactionType {
+  RAKEBACK_CREDIT
+  SERVICE_PURCHASE
+  COURSE_PURCHASE
+  REFERRAL_COMMISSION
+  STAKING_PROFIT
+  STAKING_LOSS
+  MANUAL_ADJUSTMENT
+  WITHDRAWAL
+  BONUS
+  POINTS_REWARD
+}
+
+enum ServiceCategory {
+  VPN
+  DATAMINING
+  TOOLS
+  COACHING
+  OTHER
+}
+
+enum ServiceStatus {
+  AVAILABLE
+  COMING_SOON
+  DISCONTINUED
+}
+
+enum OrderStatus {
+  PENDING
+  CONFIRMED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+enum CourseStatus {
+  DRAFT
+  OPEN_ENROLLMENT
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum EnrollmentStatus {
+  ENROLLED
+  TRIAL
+  COMPLETED
+  DROPPED
+  EXPELLED
+}
+
+enum StakingStatus {
+  PROPOSED
+  ACTIVE
+  SETTLED
+  CANCELLED
+  DEFAULTED
+}
+
+enum TicketStatus {
+  OPEN
+  IN_PROGRESS
+  WAITING_USER
+  RESOLVED
+  CLOSED
+}
+
+enum TicketPriority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+// ============================================
+// MODELS
+// ============================================
+
+model User {
+  id                 String          @id @default(cuid())
+  email              String          @unique
+  password           String
+  name               String
+  nickname           String?         @unique
+  avatar             String?
+  role               UserRole        @default(PLAYER)
+  stratum            PlayerStratum   @default(NOVATO)
+  status             UserStatus      @default(PENDING)
+
+  // Discord
+  discordId          String?         @unique
+  discordUsername     String?
+  discordConnected   Boolean         @default(false)
+
+  // Onboarding
+  onboardingStep     Int             @default(0)
+  country            String?
+  playingLevel       String?
+  weeklyHours        Float?
+  primaryRoom        String?
+  secondaryRooms     String[]
+  goals              String[]
+
+  // Financials
+  totalRakeback      Float           @default(0)
+  availableBalance   Float           @default(0)
+  pendingBalance     Float           @default(0)
+  lifetimeEarnings   Float           @default(0)
+
+  // Gamification
+  points             Int             @default(0)
+  level              Int             @default(1)
+
+  // Referrals
+  referredById       String?
+  referredBy         User?           @relation("Referrals", fields: [referredById], references: [id])
+  referrals          User[]          @relation("Referrals")
+  referralCode       String          @unique @default(cuid())
+
+  // Timestamps
+  lastLoginAt        DateTime?
+  lastActiveAt       DateTime?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  deletedAt          DateTime?
+
+  // Relations
+  rakebackRecords       RakebackRecord[]
+  balanceTransactions   BalanceTransaction[]
+  roomAffiliations      RoomAffiliation[]
+  serviceOrders         ServiceOrder[]
+  courseEnrollments      CourseEnrollment[]
+  stakingDeals          StakingDeal[]
+  achievements          UserAchievement[]
+  notifications         Notification[]
+  supportTickets        SupportTicket[]
+  activityLogs          ActivityLog[]
+  chatMessages          ChatMessage[]
+
+  @@index([email])
+  @@index([role])
+  @@index([stratum])
+  @@index([status])
+  @@index([referredById])
+}
+
+model PokerRoom {
+  id                String       @id @default(cuid())
+  name              String       @unique
+  slug              String       @unique
+  logo              String?
+  website           String?
+  affiliateCode     String
+  rakebackBase      Float
+  rakebackPremium   Float?
+  description       String?
+  setupGuide        String?      @db.Text
+  vpnRequired       Boolean      @default(false)
+  vpnInstructions   String?      @db.Text
+  countriesAllowed  String[]
+  countriesBlocked  String[]
+  status            RoomStatus   @default(ACTIVE)
+  sortOrder         Int          @default(0)
+
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+
+  affiliations      RoomAffiliation[]
+  rakebackRecords   RakebackRecord[]
+  rakebackTiers     RakebackTier[]
+}
+
+model RakebackTier {
+  id              String        @id @default(cuid())
+  roomId          String
+  room            PokerRoom     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  stratum         PlayerStratum
+  rakebackPercent Float
+  description     String?
+
+  @@unique([roomId, stratum])
+}
+
+model RoomAffiliation {
+  id             String    @id @default(cuid())
+  userId         String
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId         String
+  room           PokerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  playerRoomId   String?
+  affiliatedAt   DateTime  @default(now())
+  verified       Boolean   @default(false)
+  verifiedAt     DateTime?
+  isPrimary      Boolean   @default(false)
+  status         String    @default("ACTIVE")
+  notes          String?
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@unique([userId, roomId])
+}
+
+model RakebackRecord {
+  id              String         @id @default(cuid())
+  userId          String
+  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId          String
+  room            PokerRoom      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+
+  period          String
+  periodStart     DateTime
+  periodEnd       DateTime
+  rakeGenerated   Float
+  rakebackPercent Float
+  rakebackAmount  Float
+  status          RakebackStatus @default(PENDING)
+
+  loadedBy        String?
+  loadedAt        DateTime?
+  notes           String?
+
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([userId])
+  @@index([roomId])
+  @@index([period])
+}
+
+model BalanceTransaction {
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type           TransactionType
+  amount         Float
+  balanceBefore  Float
+  balanceAfter   Float
+  description    String
+  referenceId    String?
+  referenceType  String?
+
+  createdBy      String?
+  createdAt      DateTime        @default(now())
+
+  @@index([userId])
+  @@index([type])
+}
+
+model Service {
+  id                 String          @id @default(cuid())
+  name               String
+  slug               String          @unique
+  category           ServiceCategory
+  description        String          @db.Text
+  shortDescription   String
+  icon               String?
+
+  priceEur           Float
+  priceInBalance     Float?
+  isRecurring        Boolean         @default(false)
+  recurringPeriod    String?
+
+  status             ServiceStatus   @default(AVAILABLE)
+  requiredStratum    PlayerStratum?
+  sortOrder          Int             @default(0)
+
+  features           String[]
+  setupInstructions  String?         @db.Text
+
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  orders             ServiceOrder[]
+}
+
+model ServiceOrder {
+  id              String      @id @default(cuid())
+  userId          String
+  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId       String
+  service         Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  amount          Float
+  paidWithBalance Boolean     @default(true)
+  status          OrderStatus @default(PENDING)
+
+  notes           String?
+  deliveredAt     DateTime?
+
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  @@index([userId])
+  @@index([serviceId])
+}
+
+model Course {
+  id                    String        @id @default(cuid())
+  title                 String
+  slug                  String        @unique
+  description           String        @db.Text
+  teacherId             String?
+
+  priceEur              Float
+  priceWithAffiliation  Float?
+  maxStudents           Int           @default(12)
+  durationWeeks         Int           @default(12)
+  trialWeeks            Int           @default(2)
+
+  startDate             DateTime?
+  endDate               DateTime?
+  schedule              String?
+
+  status                CourseStatus  @default(DRAFT)
+  requiredStratum       PlayerStratum?
+  requiresAffiliation   Boolean       @default(true)
+
+  createdAt             DateTime      @default(now())
+  updatedAt             DateTime      @updatedAt
+
+  enrollments           CourseEnrollment[]
+  lessons               CourseLesson[]
+}
+
+model CourseLesson {
+  id            String    @id @default(cuid())
+  courseId       String
+  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  title         String
+  description   String?
+  lessonNumber  Int
+  scheduledAt   DateTime?
+  recordingUrl  String?
+  materials     String[]
+
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model CourseEnrollment {
+  id                          String           @id @default(cuid())
+  userId                      String
+  user                        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId                     String
+  course                      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  status                      EnrollmentStatus @default(TRIAL)
+  paidAmount                  Float
+  paidWithBalance             Boolean          @default(false)
+  enrolledAt                  DateTime         @default(now())
+  completedAt                 DateTime?
+
+  rakeGeneratedDuringCourse   Float            @default(0)
+
+  @@unique([userId, courseId])
+}
+
+model StakingDeal {
+  id                  String        @id @default(cuid())
+  userId              String
+  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  totalBankroll       Float
+  mpdContribution     Float
+  playerContribution  Float
+  profitSplitMpd      Float         @default(35)
+  profitSplitPlayer   Float         @default(65)
+
+  status              StakingStatus @default(PROPOSED)
+  startDate           DateTime?
+  endDate             DateTime?
+
+  currentMakeup       Float         @default(0)
+  totalProfit         Float         @default(0)
+  totalLoss           Float         @default(0)
+
+  notes               String?       @db.Text
+
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+
+  periods             StakingPeriod[]
+
+  @@index([userId])
+}
+
+model StakingPeriod {
+  id            String      @id @default(cuid())
+  dealId        String
+  deal          StakingDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  periodStart   DateTime
+  periodEnd     DateTime
+  profitLoss    Float
+  makeupBefore  Float
+  makeupAfter   Float
+  mpdShare      Float
+  playerShare   Float
+
+  notes         String?
+  createdAt     DateTime    @default(now())
+}
+
+model Achievement {
+  id            String            @id @default(cuid())
+  slug          String            @unique
+  name          String
+  description   String
+  icon          String
+  category      String
+  pointsAwarded Int               @default(0)
+  requiredValue Float?
+  isSecret      Boolean           @default(false)
+  sortOrder     Int               @default(0)
+
+  createdAt     DateTime          @default(now())
+
+  users         UserAchievement[]
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+}
+
+model LeaderboardEntry {
+  id       String   @id @default(cuid())
+  userId   String
+  period   String
+  category String
+  value    Float
+  rank     Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, period, category])
+}
+
+model SupportTicket {
+  id         String         @id @default(cuid())
+  userId     String
+  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  subject    String
+  category   String
+  priority   TicketPriority @default(MEDIUM)
+  status     TicketStatus   @default(OPEN)
+
+  assignedTo String?
+  resolvedAt DateTime?
+
+  createdAt  DateTime       @default(now())
+  updatedAt  DateTime       @updatedAt
+
+  messages   TicketMessage[]
+
+  @@index([userId])
+  @@index([status])
+}
+
+model TicketMessage {
+  id          String        @id @default(cuid())
+  ticketId    String
+  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+
+  senderId    String
+  senderRole  String
+  content     String        @db.Text
+  attachments String[]
+
+  createdAt   DateTime      @default(now())
+}
+
+model Notification {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  type     String
+  title    String
+  message  String
+  link     String?
+  read     Boolean  @default(false)
+  readAt   DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([read])
+}
+
+model KnowledgeArticle {
+  id        String   @id @default(cuid())
+  title     String
+  slug      String   @unique
+  content   String   @db.Text
+  category  String
+  isPublic  Boolean  @default(true)
+  tags      String[]
+  sortOrder Int      @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatMessage {
+  id       String   @id @default(cuid())
+  userId   String
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  botType  String
+  role     String
+  content  String   @db.Text
+  metadata Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model ActivityLog {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  action     String
+  entityType String?
+  entityId   String?
+  details    Json?
+  ipAddress  String?
+
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+}
+
+model SystemSetting {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String   @db.Text
+  description String?
+  category    String   @default("GENERAL")
+
+  updatedBy   String?
+  updatedAt   DateTime @updatedAt
+}
