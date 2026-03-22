@@ -1,65 +1,189 @@
-import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { PublicNavbar } from "@/components/layout/PublicNavbar";
+import { Footer } from "@/components/layout/Footer";
+import {
+  ArrowRight, Calculator, Shield, Database, Wrench, GraduationCap, Users,
+  TrendingUp, CheckCircle2, Zap, BarChart3, Wallet, ChevronDown,
+} from "lucide-react";
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
+    <div className="min-h-screen bg-mpd-black">
+      <PublicNavbar />
+
+      {/* Hero */}
+      <section className="relative min-h-screen flex items-center pt-16">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,rgba(201,168,76,0.08),transparent_50%)]" />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative">
+          <div className="max-w-3xl">
+            <Badge variant="outline" className="mb-6 text-mpd-gold border-mpd-gold/30">
+              Ecosistema integral para jugadores de poker
+            </Badge>
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-mpd-white leading-tight">
+              Tú juegas al poker.{" "}
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-mpd-gold to-mpd-gold-light">
+                Nosotros resolvemos todo lo demás.
+              </span>
+            </h1>
+            <p className="mt-6 text-lg text-mpd-gray max-w-2xl">
+              Manager Poker Deal es tu plataforma integral: rakeback optimizado, herramientas profesionales,
+              coaching, comunidad y gestión de bankroll. Todo en un solo lugar.
+            </p>
+            <div className="mt-8 flex flex-col sm:flex-row gap-4">
+              <Button size="lg" asChild>
+                <Link href="/calculadora">
+                  <Calculator className="mr-2 h-5 w-5" />
+                  Calcula tu Rakeback
+                </Link>
+              </Button>
+              <Button variant="outline" size="lg" asChild>
+                <Link href="/register">
+                  Únete Gratis <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+            <div className="mt-12 flex items-center gap-8 text-sm text-mpd-gray">
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-mpd-green" />
+                100+ jugadores activos
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-mpd-gold" />
+                5 salas disponibles
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="h-2 w-2 rounded-full bg-mpd-green" />
+                €50.000+ distribuidos
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* How it Works */}
+      <section className="py-20 border-t border-mpd-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-mpd-white">Cómo Funciona</h2>
+            <p className="mt-2 text-mpd-gray">En 4 simples pasos empiezas a optimizar tu poker</p>
+            <div className="mt-3 h-0.5 w-12 bg-mpd-gold rounded-full mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            {[
+              { step: "01", icon: <Users className="h-6 w-6" />, title: "Regístrate", desc: "Crea tu cuenta gratis y cuéntanos tu nivel de juego" },
+              { step: "02", icon: <BarChart3 className="h-6 w-6" />, title: "Elige tu sala", desc: "Te recomendamos la mejor sala y te guiamos en el alta" },
+              { step: "03", icon: <Zap className="h-6 w-6" />, title: "Juega", desc: "Juega como siempre. Tu rakeback se acumula automáticamente" },
+              { step: "04", icon: <Wallet className="h-6 w-6" />, title: "Canjea", desc: "Usa tu saldo en servicios premium o retíralo" },
+            ].map((item) => (
+              <div key={item.step} className="text-center group">
+                <div className="relative mx-auto mb-4">
+                  <div className="h-16 w-16 mx-auto rounded-2xl bg-mpd-surface border border-mpd-border group-hover:border-mpd-gold/50 flex items-center justify-center text-mpd-gold transition-colors">
+                    {item.icon}
+                  </div>
+                  <span className="absolute -top-2 -right-2 h-6 w-6 rounded-full bg-mpd-gold text-mpd-black text-xs font-bold flex items-center justify-center">
+                    {item.step}
+                  </span>
+                </div>
+                <h3 className="text-lg font-semibold text-mpd-white">{item.title}</h3>
+                <p className="mt-1 text-sm text-mpd-gray">{item.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Services */}
+      <section className="py-20 bg-mpd-surface/30 border-t border-mpd-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-mpd-white">Ecosistema Completo</h2>
+            <p className="mt-2 text-mpd-gray">Todo lo que necesitas para profesionalizar tu poker</p>
+            <div className="mt-3 h-0.5 w-12 bg-mpd-gold rounded-full mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {[
+              { icon: <TrendingUp className="h-5 w-5" />, title: "Rakeback Optimizado", desc: "Los mejores % de rakeback negociados con las principales salas", badge: "Core" },
+              { icon: <Shield className="h-5 w-5" />, title: "VPN Profesional", desc: "IP residencial dedicada para jugar sin restricciones", badge: "Disponible" },
+              { icon: <Database className="h-5 w-5" />, title: "Datamining", desc: "Millones de manos actualizadas semanalmente de todas las salas", badge: "Disponible" },
+              { icon: <Wrench className="h-5 w-5" />, title: "Herramientas con Descuento", desc: "HUDs, solvers y software a precio especial para miembros", badge: "Disponible" },
+              { icon: <GraduationCap className="h-5 w-5" />, title: "Cursos y Coaching", desc: "Formación trimestral con profesionales y sesiones 1-on-1", badge: "Disponible" },
+              { icon: <Wallet className="h-5 w-5" />, title: "Bancaje Selectivo", desc: "Financiación parcial de bankroll para jugadores cualificados", badge: "Selectivo" },
+            ].map((item) => (
+              <Card key={item.title} className="group hover:border-mpd-gold/30 transition-colors">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="h-10 w-10 rounded-xl bg-mpd-gold/10 flex items-center justify-center text-mpd-gold group-hover:bg-mpd-gold/20 transition-colors">
+                      {item.icon}
+                    </div>
+                    <Badge variant={item.badge === "Core" ? "default" : item.badge === "Selectivo" ? "warning" : "success"} className="text-[10px]">
+                      {item.badge}
+                    </Badge>
+                  </div>
+                  <h3 className="font-semibold text-mpd-white">{item.title}</h3>
+                  <p className="mt-1 text-sm text-mpd-gray">{item.desc}</p>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ */}
+      <section className="py-20 border-t border-mpd-border/50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-mpd-white">Preguntas Frecuentes</h2>
+            <div className="mt-3 h-0.5 w-12 bg-mpd-gold rounded-full mx-auto" />
+          </div>
+          <div className="space-y-4">
+            {[
+              { q: "¿Qué es el rakeback?", a: "Es un porcentaje del rake (comisión) que generas jugando poker online y que se te devuelve. Con MPD, negociamos los mejores porcentajes y te lo acumulamos como saldo interno." },
+              { q: "¿Tiene algún coste registrarse?", a: "No. El registro en MPD es completamente gratuito. Solo necesitas registrarte en una de nuestras salas afiliadas con nuestro código." },
+              { q: "¿Cómo funciona el saldo interno?", a: "Tu rakeback se acumula como crédito dentro de MPD. Puedes usarlo para comprar servicios (VPN, datamining, cursos) o solicitarlo como retiro." },
+              { q: "¿Necesito VPN para jugar?", a: "Depende de la sala y tu país. Algunas salas tienen restricciones geográficas. MPD ofrece VPN residencial y comercial para estos casos." },
+              { q: "¿Qué salas están disponibles?", a: "Trabajamos con PokerStars, GGPoker, 888poker, WPT Global e iPoker Network. Estamos constantemente negociando con nuevas salas." },
+              { q: "¿Puedo referir a otros jugadores?", a: "Sí. Cada usuario tiene un código de referido único. Cuando alguien se registra con tu código, recibes comisiones por su actividad." },
+            ].map((item, i) => (
+              <details key={i} className="group">
+                <summary className="flex items-center justify-between p-4 rounded-lg bg-mpd-surface border border-mpd-border cursor-pointer hover:border-mpd-border-light transition-colors list-none">
+                  <span className="text-sm font-medium text-mpd-white">{item.q}</span>
+                  <ChevronDown className="h-4 w-4 text-mpd-gray group-open:rotate-180 transition-transform" />
+                </summary>
+                <div className="px-4 pb-4 pt-2">
+                  <p className="text-sm text-mpd-gray">{item.a}</p>
+                </div>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA */}
+      <section className="py-20 bg-gradient-to-b from-mpd-surface/50 to-mpd-black border-t border-mpd-border/50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-mpd-white">
+            ¿Listo para optimizar tu poker?
+          </h2>
+          <p className="mt-4 text-lg text-mpd-gray">
+            Únete a Manager Poker Deal y empieza a recibir rakeback desde tu primera sesión.
           </p>
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
+            <Button size="lg" asChild>
+              <Link href="/register">
+                Crear Cuenta Gratis <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+            <Button variant="outline" size="lg" asChild>
+              <Link href="/calculadora">Calcula tu Rakeback</Link>
+            </Button>
+          </div>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
+      </section>
+
+      <Footer />
     </div>
   );
 }
