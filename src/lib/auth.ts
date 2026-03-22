@@ -5,6 +5,7 @@ import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { UserRole, PlayerStratum } from "@prisma/client";
+import { authConfig } from "./auth.config";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -50,13 +51,7 @@ declare module "next-auth" {
 }
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  session: {
-    strategy: "jwt",
-  },
+  ...authConfig,
   providers: [
     Credentials({
       name: "credentials",
@@ -103,6 +98,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
+    ...authConfig.callbacks,
     async jwt({ token, user, account }) {
       if (user) {
         token.id = user.id as string;
@@ -122,13 +118,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         });
 
         if (!dbUser) {
-          // Check if there's a user with this email
           dbUser = await prisma.user.findUnique({
             where: { email: token.email as string },
           });
 
           if (dbUser) {
-            // Link Discord to existing user
             dbUser = await prisma.user.update({
               where: { id: dbUser.id },
               data: {
@@ -139,11 +133,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
               },
             });
           } else {
-            // Create new user from Discord
             dbUser = await prisma.user.create({
               data: {
                 email: token.email as string,
-                password: "", // Discord users don't have password
+                password: "",
                 name: token.name as string,
                 discordId,
                 discordUsername: token.name,
@@ -180,42 +173,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.discordConnected = token.discordConnected as boolean;
       session.user.onboardingStep = token.onboardingStep as number;
       return session;
-    },
-    async authorized({ auth, request }) {
-      const isLoggedIn = !!auth?.user;
-      const pathname = request.nextUrl.pathname;
-
-      // Public routes
-      if (
-        pathname === "/" ||
-        pathname === "/login" ||
-        pathname === "/register" ||
-        pathname.startsWith("/register/onboarding") ||
-        pathname === "/calculadora" ||
-        pathname === "/como-funciona" ||
-        pathname === "/servicios" ||
-        pathname === "/faq" ||
-        pathname.startsWith("/legal") ||
-        pathname.startsWith("/ref/") ||
-        pathname.startsWith("/api/auth")
-      ) {
-        return true;
-      }
-
-      // Protected routes
-      if (!isLoggedIn) {
-        return Response.redirect(new URL("/login", request.nextUrl));
-      }
-
-      // Admin routes
-      if (pathname.startsWith("/admin")) {
-        const role = auth?.user?.role;
-        if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
-          return Response.redirect(new URL("/dashboard", request.nextUrl));
-        }
-      }
-
-      return true;
     },
   },
 });
