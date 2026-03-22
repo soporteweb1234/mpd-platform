@@ -15,6 +15,25 @@ export const authConfig = {
   },
   providers: [],  // Providers are added in auth.ts (server-only)
   callbacks: {
+    async jwt({ token, user }) {
+      // Persist role and stratum from initial sign-in into the JWT
+      if (user) {
+        const u = user as unknown as Record<string, unknown>;
+        token.role = u.role;
+        token.stratum = u.stratum;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // Map JWT fields to session.user so middleware/layouts can access them
+      if (token) {
+        const u = session.user as unknown as Record<string, unknown>;
+        u.id = token.sub;
+        u.role = token.role;
+        u.stratum = token.stratum;
+      }
+      return session;
+    },
     async authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
       const pathname = request.nextUrl.pathname;
@@ -32,7 +51,9 @@ export const authConfig = {
         pathname.startsWith("/legal") ||
         pathname.startsWith("/ref/") ||
         pathname.startsWith("/api/auth") ||
-        pathname.startsWith("/api/chat")
+        pathname.startsWith("/api/chat") ||
+        pathname.startsWith("/api/admin") ||
+        pathname.startsWith("/api/discord")
       ) {
         return true;
       }

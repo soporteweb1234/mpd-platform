@@ -74,13 +74,12 @@ export default function DiscordSettingsPage() {
 
   const checkBotStatus = async () => {
     try {
-      const res = await fetch("/api/discord/start-bot", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "status" }),
-      });
+      const res = await fetch("/api/discord/bot-status");
       const data = await res.json();
       setBotStatus(data.status === "connected" ? "connected" : "disconnected");
+      if (data.botUser) {
+        addLog(`Bot conectado como ${data.botUser.tag}`, "success");
+      }
     } catch {
       setBotStatus("disconnected");
     }

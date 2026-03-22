@@ -11,7 +11,7 @@ import {
   LayoutDashboard, TrendingUp, Wallet, Building2, Users, ShoppingBag,
   GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, MessagesSquare, Settings,
   GitBranch, BookOpen, Bell, Bot, Activity, Landmark, ChevronLeft,
-  ChevronRight, LogOut, Menu, X,
+  ChevronRight, LogOut, Menu, X, Shield,
 } from "lucide-react";
 import { logoutUser } from "@/lib/actions/auth";
 
@@ -169,6 +169,19 @@ export function Sidebar({ items, user, type }: SidebarProps) {
 
         {/* Footer */}
         <div className="p-2 border-t border-mpd-border">
+          {type === "dashboard" && (user.role === "ADMIN" || user.role === "SUPER_ADMIN") && (
+            <Link
+              href="/admin"
+              onClick={() => setMobileOpen(false)}
+              className={cn(
+                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-mpd-amber hover:text-mpd-gold hover:bg-mpd-gold/10 transition-colors mb-1",
+                collapsed && "justify-center px-2"
+              )}
+            >
+              <Shield className="h-4 w-4 shrink-0" />
+              {!collapsed && <span>Panel Admin</span>}
+            </Link>
+          )}
           {type === "dashboard" && (
             <Link
               href="/dashboard/settings"

@@ -1,7 +1,12 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
-import { startDiscordBot, stopDiscordBot, getBotInstance } from "@/lib/discord/bot";
+import {
+  startDiscordBot,
+  stopDiscordBot,
+  isBotConnected,
+  autoStartBot,
+} from "@/lib/discord/bot";
 
 export async function POST(request: Request) {
   const session = await auth();
@@ -19,11 +24,12 @@ export async function POST(request: Request) {
 
   if (action === "status") {
     return NextResponse.json({
-      status: getBotInstance() ? "connected" : "disconnected",
+      status: isBotConnected() ? "connected" : "disconnected",
     });
   }
 
-  // Get token and guild ID from SystemSetting or env
+  // action === "start"
+  // Get token and guild ID from SystemSetting first, then env
   let token = process.env.DISCORD_BOT_TOKEN;
   let guildId = process.env.DISCORD_GUILD_ID;
 
@@ -39,7 +45,7 @@ export async function POST(request: Request) {
 
   if (!token || !guildId) {
     return NextResponse.json(
-      { error: "Discord bot token or guild ID not configured" },
+      { error: "Discord bot token or guild ID not configured. Set them in SystemSetting or env." },
       { status: 400 }
     );
   }
@@ -48,9 +54,10 @@ export async function POST(request: Request) {
     await startDiscordBot(token, guildId);
     return NextResponse.json({ status: "connected" });
   } catch (error) {
-    console.error("[Discord API] Failed to start bot:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[Discord API] Failed to start bot:", message);
     return NextResponse.json(
-      { error: "Failed to connect bot" },
+      { error: `Failed to connect bot: ${message}` },
       { status: 500 }
     );
   }

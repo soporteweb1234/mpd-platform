@@ -173,18 +173,24 @@ export async function sendMessage(channelId: string, content: string, replyToId?
 
   // Sync to Discord if channel is linked
   if (channel.discordChannelId) {
-    const authorName = session.user.name;
+    console.log(`[Community] Sending to Discord #${channel.name} (discordChannelId: ${channel.discordChannelId}): ${trimmed.slice(0, 80)}`);
     const discordMsgId = await sendToDiscord(
       channel.discordChannelId,
-      authorName,
+      session.user.name ?? "Unknown",
+      session.user.stratum,
       trimmed
     );
     if (discordMsgId) {
+      console.log(`[Community] Discord message sent, discordMsgId: ${discordMsgId}`);
       await prisma.message.update({
         where: { id: message.id },
         data: { discordMessageId: discordMsgId },
       });
+    } else {
+      console.warn(`[Community] Failed to send to Discord — sendToDiscord returned null`);
     }
+  } else {
+    console.log(`[Community] Channel ${channel.name} has no discordChannelId, skipping Discord sync`);
   }
 
   return message;
@@ -217,6 +223,7 @@ export async function editMessage(messageId: string, content: string) {
       message.channel.discordChannelId,
       message.discordMessageId,
       session.user.name,
+      session.user.stratum,
       trimmed
     );
   }

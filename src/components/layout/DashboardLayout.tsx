@@ -14,6 +14,7 @@ export async function DashboardLayout({ children }: { children: React.ReactNode 
       name: true,
       avatar: true,
       stratum: true,
+      role: true,
       availableBalance: true,
     },
   });
@@ -28,6 +29,7 @@ export async function DashboardLayout({ children }: { children: React.ReactNode 
           name: user.name,
           avatar: user.avatar,
           stratum: user.stratum,
+          role: user.role,
           availableBalance: user.availableBalance,
         }}
         type="dashboard"

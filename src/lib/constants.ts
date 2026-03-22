@@ -48,6 +48,7 @@ export const NAVIGATION = {
     { label: "Bot Interno", href: "/admin/bot", icon: "Bot" },
     { label: "Actividad", href: "/admin/activity", icon: "Activity" },
     { label: "Configuración", href: "/admin/settings", icon: "Settings" },
+    { label: "Discord Sync", href: "/admin/settings/discord", icon: "MessageSquare" },
   ],
 } as const;
 
