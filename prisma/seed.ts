@@ -10,6 +10,10 @@ async function main() {
   console.log("Seeding database...");
 
   // Clean existing data
+  await prisma.reaction.deleteMany();
+  await prisma.message.deleteMany();
+  await prisma.channelMember.deleteMany();
+  await prisma.channel.deleteMany();
   await prisma.chatMessage.deleteMany();
   await prisma.ticketMessage.deleteMany();
   await prisma.notification.deleteMany();
@@ -446,6 +450,137 @@ async function main() {
     });
   }
 
+  // 10. Community Channels
+  const channelsData = [
+    { name: "general", slug: "general", description: "Chat general de la comunidad", category: "GENERAL", sortOrder: 0 },
+    { name: "presentaciones", slug: "presentaciones", description: "Preséntate a la comunidad", category: "GENERAL", sortOrder: 1 },
+    { name: "off-topic", slug: "off-topic", description: "Todo lo que no sea poker", category: "GENERAL", sortOrder: 2 },
+    { name: "spots-micro", slug: "spots-micro", description: "Análisis de manos NL2-NL10", category: "NIVEL", sortOrder: 3, requiredStratum: "NOVATO" as const },
+    { name: "spots-mid", slug: "spots-mid", description: "Análisis de manos NL25-NL50", category: "NIVEL", sortOrder: 4, requiredStratum: "SEMI_PRO" as const },
+    { name: "spots-high", slug: "spots-high", description: "Análisis de manos NL100-NL200", category: "NIVEL", sortOrder: 5, requiredStratum: "PROFESIONAL" as const },
+    { name: "high-rollers", slug: "high-rollers", description: "Canal exclusivo NL500+", category: "NIVEL", sortOrder: 6, requiredStratum: "REFERENTE" as const },
+    { name: "vpn-soporte", slug: "vpn-soporte", description: "Ayuda con VPN y configuración", category: "HERRAMIENTAS", sortOrder: 7 },
+    { name: "huds-solvers", slug: "huds-solvers", description: "HUDs, solvers y herramientas", category: "HERRAMIENTAS", sortOrder: 8 },
+    { name: "grupo-estudio", slug: "grupo-estudio", description: "Grupos de estudio y formación", category: "FORMACION", sortOrder: 9 },
+    { name: "analisis-semanal", slug: "analisis-semanal", description: "Análisis semanal de manos", category: "FORMACION", sortOrder: 10 },
+    { name: "dudas-salas", slug: "dudas-salas", description: "Preguntas sobre salas de poker", category: "SOPORTE", sortOrder: 11 },
+    { name: "dudas-rakeback", slug: "dudas-rakeback", description: "Preguntas sobre rakeback y saldo", category: "SOPORTE", sortOrder: 12 },
+    { name: "admin-interno", slug: "admin-interno", description: "Canal interno del equipo", category: "GENERAL", sortOrder: 13, isPrivate: true, requiredRole: "ADMIN" as const },
+  ];
+
+  const channels: Array<{ id: string; slug: string }> = [];
+  for (const ch of channelsData) {
+    const channel = await prisma.channel.create({
+      data: {
+        name: ch.name,
+        slug: ch.slug,
+        description: ch.description,
+        category: ch.category,
+        sortOrder: ch.sortOrder,
+        isPrivate: ch.isPrivate ?? false,
+        requiredStratum: ch.requiredStratum ?? null,
+        requiredRole: ch.requiredRole ?? null,
+      },
+    });
+    channels.push({ id: channel.id, slug: channel.slug });
+  }
+
+  // Add all users as members to general channels
+  const generalChannelIds = channels.filter(c => ["general", "presentaciones", "off-topic"].includes(c.slug)).map(c => c.id);
+  const allUserIds = [admin.id, ...players.map(p => p.id)];
+  for (const channelId of generalChannelIds) {
+    for (const userId of allUserIds) {
+      await prisma.channelMember.create({
+        data: { channelId, userId },
+      });
+    }
+  }
+
+  // Add players to their stratum-appropriate channels
+  const spotsMicro = channels.find(c => c.slug === "spots-micro");
+  const spotsMid = channels.find(c => c.slug === "spots-mid");
+  if (spotsMicro) {
+    for (const p of players) {
+      await prisma.channelMember.create({ data: { channelId: spotsMicro.id, userId: p.id } });
+    }
+  }
+  if (spotsMid) {
+    for (const p of players.filter(p => ["SEMI_PRO", "PROFESIONAL", "REFERENTE"].includes(p.stratum))) {
+      await prisma.channelMember.create({ data: { channelId: spotsMid.id, userId: p.id } });
+    }
+  }
+
+  // 11. Sample Messages
+  const generalChannel = channels.find(c => c.slug === "general");
+  const spotsChannel = channels.find(c => c.slug === "spots-micro");
+
+  if (generalChannel) {
+    const generalMessages = [
+      { userId: players[0].id, content: "¡Hola a todos! Acabo de unirme a MPD. Encantado de estar aquí.", minutesAgo: 180 },
+      { userId: players[2].id, content: "Bienvenido! Aquí se aprende mucho. No dudes en preguntar.", minutesAgo: 175 },
+      { userId: players[5].id, content: "¿Alguien más jugando la serie de GGPoker este fin de semana?", minutesAgo: 150 },
+      { userId: players[8].id, content: "Yo estoy registrado en 3 torneos. El Sunday Special tiene buen overlay.", minutesAgo: 145 },
+      { userId: players[3].id, content: "¿Cómo va el rakeback este mes? Yo llevo €340 en PokerStars", minutesAgo: 120 },
+      { userId: players[6].id, content: "Yo voy por €1.200 en GG. El nuevo sistema de Fish Buffet está dando bien.", minutesAgo: 115 },
+      { userId: null, content: "Acabo de empezar con NL10 y no sé si debería usar HUD. ¿Recomendaciones?", minutesAgo: 90, source: "DISCORD", discordAuthorName: "PokerNewbie23", discordAuthorAvatar: null },
+      { userId: players[4].id, content: "PT4 es imprescindible desde NL10. MPD tiene descuento, mira en servicios.", minutesAgo: 85 },
+      { userId: players[1].id, content: "Yo uso PokerTracker desde que empecé y la diferencia es brutal.", minutesAgo: 80 },
+      { userId: null, content: "Gracias! Lo voy a mirar. ¿Se puede pagar con el saldo de rakeback?", minutesAgo: 75, source: "DISCORD", discordAuthorName: "PokerNewbie23", discordAuthorAvatar: null },
+      { userId: players[2].id, content: "Sí, puedes canjear tu saldo interno por servicios. Es lo mejor de MPD.", minutesAgo: 70 },
+      { userId: players[7].id, content: "¿Alguien tiene experiencia con WPT Global? Estoy pensando en abrir cuenta.", minutesAgo: 50 },
+      { userId: players[9].id, content: "Yo juego ahí desde hace 6 meses. La acción es increíble, sobre todo en NL100+. Necesitas VPN eso sí.", minutesAgo: 45 },
+      { userId: admin.id, content: "**Recordatorio**: Mañana a las 20:00 CET tenemos la sesión semanal de análisis de manos en #analisis-semanal. ¡No os la perdáis!", minutesAgo: 30 },
+      { userId: players[5].id, content: "Ahí estaré. La sesión pasada fue muy buena, aprendí bastante sobre sizing en river.", minutesAgo: 25 },
+    ];
+
+    for (const msg of generalMessages) {
+      const createdAt = new Date(now.getTime() - msg.minutesAgo * 60000);
+      await prisma.message.create({
+        data: {
+          channelId: generalChannel.id,
+          userId: msg.userId,
+          content: msg.content,
+          source: msg.source ?? "WEB",
+          discordAuthorName: msg.discordAuthorName ?? null,
+          discordAuthorAvatar: msg.discordAuthorAvatar ?? null,
+          createdAt,
+        },
+      });
+    }
+  }
+
+  if (spotsChannel) {
+    const spotsMessages = [
+      { userId: players[0].id, content: "NL5 6max, UTG abre 2.5bb, hero en BTN con AQs. ¿3bet o call?", minutesAgo: 200 },
+      { userId: players[1].id, content: "3bet siempre ahí. AQs es premium en BTN vs UTG open. Sizing: 8-9bb.", minutesAgo: 195 },
+      { userId: players[2].id, content: "Concuerdo. En micro puedes ir incluso a 10bb, la gente paga igual.", minutesAgo: 190 },
+      { userId: null, content: "¿Y si UTG es un reg tight que solo abre 12% desde UTG?", minutesAgo: 185, source: "DISCORD", discordAuthorName: "MicroGrinder_ES", discordAuthorAvatar: null },
+      { userId: players[4].id, content: "Aún así 3bet. AQs tiene buen equity vs su rango y position advantage post.", minutesAgo: 180 },
+      { userId: players[0].id, content: "Otra mano: NL10, hero en BB con 77, SB completa. Flop: 7♠ 4♥ 2♣. ¿Sizing?", minutesAgo: 120 },
+      { userId: players[3].id, content: "Flop seco, puedes ir 33% pot. No hay draws, quieres que pague con Ax, pares bajos.", minutesAgo: 115 },
+      { userId: players[1].id, content: "Check podría ser interesante para atrapar. No va a foldar mucho en ese board.", minutesAgo: 110 },
+      { userId: null, content: "Yo haría 50% pot. En micro la gente paga cualquier cosa con top pair.", minutesAgo: 105, source: "DISCORD", discordAuthorName: "MicroGrinder_ES", discordAuthorAvatar: null },
+      { userId: players[2].id, content: "En micro sí, sizing más grande funciona porque no ajustan. Buen punto.", minutesAgo: 100 },
+      { userId: players[0].id, content: "Al final fui 40% pot, pagó con A4o y le saqué 3 calles. 💰", minutesAgo: 60 },
+      { userId: players[4].id, content: "Bien jugado. En micro la paciencia y el value betting pagan las facturas.", minutesAgo: 55 },
+    ];
+
+    for (const msg of spotsMessages) {
+      const createdAt = new Date(now.getTime() - msg.minutesAgo * 60000);
+      await prisma.message.create({
+        data: {
+          channelId: spotsChannel.id,
+          userId: msg.userId,
+          content: msg.content,
+          source: msg.source ?? "WEB",
+          discordAuthorName: msg.discordAuthorName ?? null,
+          discordAuthorAvatar: msg.discordAuthorAvatar ?? null,
+          createdAt,
+        },
+      });
+    }
+  }
+
   console.log("Seed completed!");
   console.log(`  - 1 admin (admin@mpd.com / MPD2026Admin!)`);
   console.log(`  - ${rooms.length} poker rooms`);
@@ -454,6 +589,8 @@ async function main() {
   console.log(`  - ${publicArticles.length + privateArticles.length} knowledge articles`);
   console.log(`  - 1 course with 4 lessons`);
   console.log(`  - 1 staking deal`);
+  console.log(`  - ${channelsData.length} community channels`);
+  console.log(`  - 27 sample messages`);
 }
 
 main()

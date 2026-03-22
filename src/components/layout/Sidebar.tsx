@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   LayoutDashboard, TrendingUp, Wallet, Building2, Users, ShoppingBag,
-  GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, Settings,
+  GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, MessagesSquare, Settings,
   GitBranch, BookOpen, Bell, Bot, Activity, Landmark, ChevronLeft,
   ChevronRight, LogOut, Menu, X,
 } from "lucide-react";
@@ -17,7 +17,7 @@ import { logoutUser } from "@/lib/actions/auth";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard, TrendingUp, Wallet, Building2, Users, ShoppingBag,
-  GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, Settings,
+  GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, MessagesSquare, Settings,
   GitBranch, BookOpen, Bell, Bot, Activity, Landmark,
 };
 

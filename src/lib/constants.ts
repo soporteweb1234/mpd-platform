@@ -26,6 +26,7 @@ export const NAVIGATION = {
     { label: "Servicios", href: "/dashboard/services", icon: "ShoppingBag" },
     { label: "Cursos", href: "/dashboard/courses", icon: "GraduationCap" },
     { label: "Logros", href: "/dashboard/achievements", icon: "Trophy" },
+    { label: "Comunidad", href: "/dashboard/community", icon: "MessagesSquare" },
     { label: "Ranking", href: "/dashboard/leaderboard", icon: "Medal" },
     { label: "Soporte", href: "/dashboard/support", icon: "LifeBuoy" },
     { label: "Chat Bot", href: "/dashboard/chat", icon: "MessageSquare" },
