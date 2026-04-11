@@ -121,8 +121,10 @@ export default function LandingPage() {
                   <h3 className="font-semibold text-mpd-white">{item.title}</h3>
                   <p className="mt-1 text-sm text-mpd-gray">{item.desc}</p>
                   {item.special && (
-                    <Link href="/contacto" className="inline-block mt-2 text-xs text-mpd-amber hover:text-mpd-gold transition-colors">
-                      Requiere servicios especiales (+info)
+                    <Link href="/contacto" className="inline-block mt-2">
+                      <Badge variant="warning" className="text-[10px] hover:bg-mpd-amber/30 transition-colors cursor-pointer">
+                        Requiere servicios especiales (+info)
+                      </Badge>
                     </Link>
                   )}
                 </CardContent>
