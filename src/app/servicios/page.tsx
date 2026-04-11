@@ -8,17 +8,17 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Servicios",
-  description: "Servicios premium del ecosistema Manager Poker Deal: VPN, datamining, herramientas, coaching y bancaje.",
+  description: "Servicios premium del ecosistema Manager Poker Deal: conexión, datamining, herramientas, coaching y bancaje.",
 };
 
 const services = [
-  { icon: <Shield className="h-6 w-6" />, title: "VPN Residencial", price: "€45/mes", desc: "IP residencial dedicada exclusiva para jugar sin restricciones geográficas.", features: ["IP residencial exclusiva", "Conexión estable 24/7", "Soporte técnico"], available: true },
-  { icon: <Shield className="h-6 w-6" />, title: "VPN Comercial", price: "€15/mes", desc: "VPN de alta velocidad para juego casual o como backup.", features: ["Alta velocidad", "Múltiples ubicaciones", "Fácil configuración"], available: true },
-  { icon: <Database className="h-6 w-6" />, title: "Datamining", price: "€30/mes", desc: "Paquete de datos de manos de las principales salas, actualización semanal.", features: ["Millones de manos", "Actualización semanal", "Formato HM3/PT4"], available: true },
-  { icon: <Wrench className="h-6 w-6" />, title: "PokerTracker 4", price: "€70", desc: "Licencia de PokerTracker 4 con descuento exclusivo para miembros MPD.", features: ["Licencia completa", "Descuento exclusivo", "Soporte instalación"], available: true },
-  { icon: <Wrench className="h-6 w-6" />, title: "PioSolver", price: "€200", desc: "Licencia de PioSolver con precio especial para miembros MPD.", features: ["Licencia PioSolver", "Descuento MPD", "Guía de uso"], available: true },
-  { icon: <GraduationCap className="h-6 w-6" />, title: "Coaching 1-on-1", price: "€120/sesión", desc: "Sesión de coaching personalizado de 90 minutos con un coach profesional.", features: ["90 minutos", "Revisión de manos", "Plan de mejora"], available: true },
-  { icon: <Wallet className="h-6 w-6" />, title: "Bancaje Selectivo", price: "Consultar", desc: "Financiación parcial de bankroll 50/50 para jugadores cualificados.", features: ["50/50 contribución", "Revisión mensual", "Makeup tracking"], available: false },
+  { icon: <Shield className="h-6 w-6" />, title: "Servicios de Conexión", price: "Consultar", desc: "Soluciones de conectividad profesional adaptadas a tu situación y necesidades.", features: ["Configuración personalizada", "Conexión estable 24/7", "Soporte técnico dedicado"], available: true, special: true },
+  { icon: <Database className="h-6 w-6" />, title: "Datamining", price: "€30/mes", desc: "Paquete de datos de manos de las principales salas para mejorar tu análisis.", features: ["Millones de manos", "Todas las salas principales", "Formato HM3/PT4"], available: true, special: false },
+  { icon: <Wrench className="h-6 w-6" />, title: "PokerTracker 4", price: "€70", desc: "Licencia de PokerTracker 4 a precio de grupo.", features: ["Licencia completa", "Descuento exclusivo", "Soporte instalación"], available: true, special: false },
+  { icon: <Wrench className="h-6 w-6" />, title: "PioSolver", price: "€200", desc: "Licencia de PioSolver a precio de grupo.", features: ["Licencia PioSolver", "Descuento MPD", "Guía de uso"], available: true, special: false },
+  { icon: <ShoppingBag className="h-6 w-6" />, title: "Más Herramientas", price: "Consultar", desc: "HUDs, solvers, scripts y software profesional a precio de grupo.", features: ["HUDs y trackers", "Solvers y calculadoras", "Scripts y utilidades"], available: true, special: false },
+  { icon: <GraduationCap className="h-6 w-6" />, title: "Sesiones de Estudio y Coaching", price: "€120/sesión", desc: "Sesiones grupales y coaching personalizado con profesionales.", features: ["Sesiones de 90 minutos", "Revisión de manos", "Plan de mejora personalizado"], available: true, special: false },
+  { icon: <Wallet className="h-6 w-6" />, title: "Bancaje Selectivo", price: "Consultar", desc: "Financiación parcial de bankroll 50/50 para jugadores cualificados.", features: ["50/50 contribución", "Revisión mensual", "Makeup tracking"], available: false, special: false },
 ];
 
 export default function ServiciosPage() {
@@ -55,6 +55,11 @@ export default function ServiciosPage() {
                       </li>
                     ))}
                   </ul>
+                  {s.special && (
+                    <Link href="/contacto" className="inline-block mt-3 text-xs text-mpd-amber hover:text-mpd-gold transition-colors">
+                      Requiere servicios especiales (+info)
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
             ))}
