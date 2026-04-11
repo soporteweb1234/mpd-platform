@@ -5,8 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataCard } from "@/components/shared/DataCard";
 import { Badge } from "@/components/ui/badge";
 import { formatCurrency, formatDate } from "@/lib/utils";
-import { TrendingUp, DollarSign, Calendar } from "lucide-react";
+import { TrendingUp, DollarSign, Calendar, Info } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { CheckCircle2, X } from "lucide-react";
 
 export const metadata = { title: "Rakeback" };
 
@@ -67,6 +68,64 @@ export default async function RakebackPage() {
           color="green"
         />
       </div>
+
+      {/* NGR Explanation */}
+      <Card className="border-mpd-gold/20">
+        <CardContent className="p-5">
+          <div className="flex items-start gap-3">
+            <Info className="h-5 w-5 text-mpd-gold shrink-0 mt-0.5" />
+            <div>
+              <h3 className="font-medium text-mpd-white mb-1">¿Qué es el Rakeback NGR?</h3>
+              <p className="text-sm text-mpd-gray">
+                Rakeback NGR (Net Gaming Revenue): porcentaje de excedente que queda tras descontar lo que la sala ha dado previamente y de forma directa al jugador. Es la base real sobre la que se calcula tu rakeback en MPD.
+              </p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Comparison Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Sin MPD vs Con MPD</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-mpd-border">
+                  <th className="text-left py-3 px-3 text-mpd-gray font-medium">Sin MPD</th>
+                  <th className="text-left py-3 px-3 text-mpd-gold font-medium">Con MPD</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  { without: "Rakeback estándar de sala", with: "Rakeback negociado superior" },
+                  { without: "Sin acceso a herramientas con descuento", with: "Herramientas a precio de grupo" },
+                  { without: "Sin comunidad", with: "Comunidad activa y retroalimentación" },
+                  { without: "Sin coaching", with: "Acceso a sesiones de estudio" },
+                  { without: "Sin gestión", with: "MPD resuelve todo lo demás" },
+                ].map((row, i) => (
+                  <tr key={i} className="border-b border-mpd-border/50">
+                    <td className="py-3 px-3 text-mpd-gray">
+                      <span className="flex items-center gap-2">
+                        <X className="h-3.5 w-3.5 text-mpd-red shrink-0" />
+                        {row.without}
+                      </span>
+                    </td>
+                    <td className="py-3 px-3 text-mpd-white">
+                      <span className="flex items-center gap-2">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-mpd-green shrink-0" />
+                        {row.with}
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

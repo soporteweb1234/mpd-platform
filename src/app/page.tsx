@@ -71,7 +71,7 @@ export default function LandingPage() {
             {[
               { step: "01", icon: <Users className="h-6 w-6" />, title: "Regístrate", desc: "Crea tu cuenta y cuéntanos tu nivel de juego" },
               { step: "02", icon: <BarChart3 className="h-6 w-6" />, title: "Elige tu sala", desc: "Analizamos tu perfil, stake, situación particular y temporalidad para recomendarte la opción con mejor relación calidad-precio para ti" },
-              { step: "03", icon: <Zap className="h-6 w-6" />, title: "Juega", desc: "Juega como siempre. Tu rakeback se acumula automáticamente" },
+              { step: "03", icon: <Zap className="h-6 w-6" />, title: "Juega", desc: "Juega como siempre. Tu rakeback se acumula automáticamente. Pertenece a la comunidad MPD: accede a recursos exclusivos y retroalimentación de otros jugadores" },
               { step: "04", icon: <Wallet className="h-6 w-6" />, title: "Canjea", desc: "Usa tu saldo en servicios premium o retíralo" },
             ].map((item) => (
               <div key={item.step} className="text-center group">
@@ -125,6 +125,43 @@ export default function LandingPage() {
                       Requiere servicios especiales (+info)
                     </Link>
                   )}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-8 text-center">
+            <Button variant="outline" asChild>
+              <Link href="/contacto">
+                Pedir +info para adaptar tu perfil, stake, situación y temporalidad
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {/* Comunidad */}
+      <section className="py-20 border-t border-mpd-border/50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-mpd-white">Comunidad MPD</h2>
+            <p className="mt-2 text-mpd-gray">Más que una plataforma: una red de jugadores que crece junta</p>
+            <div className="mt-3 h-0.5 w-12 bg-mpd-gold rounded-full mx-auto" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {[
+              { icon: <Users className="h-5 w-5" />, title: "Networking", desc: "Conecta con jugadores de tu nivel y amplía tu red de contactos en el poker profesional" },
+              { icon: <GraduationCap className="h-5 w-5" />, title: "Aprendizaje Colectivo", desc: "Retroalimentación constante, análisis de manos compartido y debates estratégicos" },
+              { icon: <TrendingUp className="h-5 w-5" />, title: "Participación Activa", desc: "Ventajas exclusivas por contribuir a la comunidad: comparte, enseña y crece" },
+              { icon: <Shield className="h-5 w-5" />, title: "Galones y Prestigio", desc: "Sistema de insignias, logros e índice de prestigio dentro de la comunidad (próximamente)" },
+            ].map((item) => (
+              <Card key={item.title} className="group hover:border-mpd-gold/30 transition-colors">
+                <CardContent className="p-6 text-center">
+                  <div className="h-10 w-10 mx-auto rounded-xl bg-mpd-gold/10 flex items-center justify-center text-mpd-gold group-hover:bg-mpd-gold/20 transition-colors mb-3">
+                    {item.icon}
+                  </div>
+                  <h3 className="font-semibold text-mpd-white">{item.title}</h3>
+                  <p className="mt-1 text-sm text-mpd-gray">{item.desc}</p>
                 </CardContent>
               </Card>
             ))}

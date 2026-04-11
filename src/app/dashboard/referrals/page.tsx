@@ -49,7 +49,7 @@ export default async function ReferralsPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h3 className="font-medium text-mpd-white mb-1">Tu código de referido</h3>
-              <p className="text-xs text-mpd-gray">Comparte tu enlace para ganar comisiones por cada jugador que se registre</p>
+              <p className="text-xs text-mpd-gray">Comparte tu enlace y gana meses de servicios VIP, % creciente del rakeback extra de tu referido, y prestigio en la comunidad</p>
             </div>
             <CopyReferralCode code={user?.referralCode ?? ""} />
           </div>
@@ -70,6 +70,26 @@ export default async function ReferralsPage() {
           color="green"
         />
       </div>
+
+      <Card>
+        <CardContent className="p-5">
+          <h3 className="font-medium text-mpd-white mb-2">Ventajas del programa de referidos</h3>
+          <ul className="space-y-2 text-sm text-mpd-gray">
+            <li className="flex items-start gap-2">
+              <span className="text-mpd-gold mt-0.5">•</span>
+              <span>Gana meses de servicios VIP por cada referido activo</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-mpd-gold mt-0.5">•</span>
+              <span>Porcentaje creciente del rakeback extra generado por tu referido</span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-mpd-gold mt-0.5">•</span>
+              <span>Gestiona grupos de enseñanza, adquiere galones y prestigio en la comunidad</span>
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

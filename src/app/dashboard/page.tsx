@@ -114,7 +114,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <DataCard
           title="Saldo Disponible"
           value={user.availableBalance}
@@ -132,6 +132,14 @@ export default async function DashboardPage() {
           subtitle={`Rakeback mes ${new Date(new Date().getFullYear(), new Date().getMonth() - 1).toLocaleDateString("es-ES", { month: "long" })} — Estimación: lo conseguido menos servicios contratados y promociones. No vinculante.`}
         />
         <DataCard
+          title="Saldo Ganado Total"
+          value={user.totalRakeback}
+          format="currency"
+          icon={<TrendingUp className="h-5 w-5 text-mpd-gold" />}
+          color="gold"
+          subtitle="Total rakeback generado desde tu registro"
+        />
+        <DataCard
           title="Rakeback del Mes"
           value={data.monthRakeback}
           format="currency"
@@ -144,6 +152,7 @@ export default async function DashboardPage() {
           format="number"
           icon={<Users className="h-5 w-5" />}
           color="white"
+          subtitle="Gana meses VIP y % creciente del rakeback extra de tus referidos"
         />
       </div>
 
