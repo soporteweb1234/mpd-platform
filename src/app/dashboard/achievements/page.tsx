@@ -3,7 +3,8 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Trophy, Lock, HelpCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Trophy, Lock, HelpCircle, Shield, Star, Award, TrendingUp } from "lucide-react";
 
 export const metadata = { title: "Logros" };
 
@@ -24,7 +25,7 @@ export default async function AchievementsPage() {
 
   const user = await prisma.user.findUnique({
     where: { id: session.user.id },
-    select: { points: true },
+    select: { points: true, level: true, stratum: true },
   });
 
   const categories = [...new Set(achievements.map((a) => a.category))];
@@ -35,18 +36,102 @@ export default async function AchievementsPage() {
     SKILLS: "Habilidades",
   };
 
+  // Gamification calculations
+  const points = user?.points ?? 0;
+  const level = user?.level ?? 1;
+  const totalAchievements = achievements.length;
+  const unlockedCount = unlockedIds.size;
+  const prestigeIndex = Math.min(Math.round((points / 100) + (unlockedCount * 5) + (level * 10)), 999);
+
+  const getReputationLevel = (index: number) => {
+    if (index >= 500) return { label: "Leyenda", color: "text-mpd-gold", bg: "bg-mpd-gold/20" };
+    if (index >= 300) return { label: "Veterano", color: "text-mpd-green", bg: "bg-mpd-green/20" };
+    if (index >= 150) return { label: "Establecido", color: "text-mpd-amber", bg: "bg-mpd-amber/20" };
+    if (index >= 50) return { label: "Activo", color: "text-mpd-white", bg: "bg-mpd-surface" };
+    return { label: "Novato", color: "text-mpd-gray", bg: "bg-mpd-surface" };
+  };
+
+  const reputation = getReputationLevel(prestigeIndex);
+
+  // Galones based on level
+  const getGalon = (lvl: number) => {
+    if (lvl >= 20) return { rank: "Diamante", icon: "💎", stripes: 5 };
+    if (lvl >= 15) return { rank: "Platino", icon: "⭐", stripes: 4 };
+    if (lvl >= 10) return { rank: "Oro", icon: "🥇", stripes: 3 };
+    if (lvl >= 5) return { rank: "Plata", icon: "🥈", stripes: 2 };
+    return { rank: "Bronce", icon: "🥉", stripes: 1 };
+  };
+
+  const galon = getGalon(level);
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold text-mpd-white">Logros</h1>
+        <h1 className="text-2xl font-bold text-mpd-white">Logros y Reputación</h1>
         <div className="flex items-center gap-2 text-mpd-gold">
           <Trophy className="h-5 w-5" />
-          <span className="font-mono font-bold">{user?.points ?? 0} pts</span>
+          <span className="font-mono font-bold">{points} pts</span>
         </div>
       </div>
 
+      {/* Gamification Panel */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Galón / Rango */}
+        <Card className="border-mpd-gold/20">
+          <CardContent className="p-5 text-center">
+            <div className="text-3xl mb-2">{galon.icon}</div>
+            <h3 className="text-sm font-medium text-mpd-white">Galón</h3>
+            <p className="text-lg font-bold text-mpd-gold">{galon.rank}</p>
+            <div className="flex justify-center gap-1 mt-1">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div
+                  key={i}
+                  className={cn(
+                    "h-1.5 w-4 rounded-full",
+                    i < galon.stripes ? "bg-mpd-gold" : "bg-mpd-border"
+                  )}
+                />
+              ))}
+            </div>
+            <p className="text-[10px] text-mpd-gray-dark mt-2">Nivel {level}</p>
+          </CardContent>
+        </Card>
+
+        {/* Logros */}
+        <Card>
+          <CardContent className="p-5 text-center">
+            <Award className="h-8 w-8 mx-auto text-mpd-gold mb-2" />
+            <h3 className="text-sm font-medium text-mpd-white">Logros</h3>
+            <p className="text-lg font-bold text-mpd-white">{unlockedCount}<span className="text-mpd-gray text-sm font-normal">/{totalAchievements}</span></p>
+            <p className="text-[10px] text-mpd-gray-dark mt-1">Hitos desbloqueados</p>
+          </CardContent>
+        </Card>
+
+        {/* Índice de Prestigio */}
+        <Card>
+          <CardContent className="p-5 text-center">
+            <Star className="h-8 w-8 mx-auto text-mpd-gold mb-2" />
+            <h3 className="text-sm font-medium text-mpd-white">Índice de Prestigio</h3>
+            <p className="text-lg font-bold font-mono text-mpd-gold">{prestigeIndex}</p>
+            <p className="text-[10px] text-mpd-gray-dark mt-1">Puntuación de reputación</p>
+          </CardContent>
+        </Card>
+
+        {/* Nivel de Reputación */}
+        <Card className={cn("border", reputation.color === "text-mpd-gold" ? "border-mpd-gold/30" : "border-mpd-border")}>
+          <CardContent className="p-5 text-center">
+            <Shield className="h-8 w-8 mx-auto text-mpd-gold mb-2" />
+            <h3 className="text-sm font-medium text-mpd-white">Reputación</h3>
+            <Badge className={cn("mt-1", reputation.bg, reputation.color)}>
+              {reputation.label}
+            </Badge>
+            <p className="text-[10px] text-mpd-gray-dark mt-2">Badge visible en tu perfil</p>
+          </CardContent>
+        </Card>
+      </div>
+
       <p className="text-sm text-mpd-gray">
-        {unlockedIds.size} de {achievements.length} logros desbloqueados
+        {unlockedCount} de {totalAchievements} logros desbloqueados
       </p>
 
       {categories.map((cat) => (

@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BadgeStratum } from "@/components/shared/BadgeStratum";
 import { formatCurrency, formatDate, getStratumLabel } from "@/lib/utils";
 import { STRATUM_THRESHOLDS } from "@/lib/constants";
-import { Wallet, Clock, TrendingUp, Users, ArrowUpRight, ArrowDownRight, CheckCircle2 } from "lucide-react";
+import { Wallet, Clock, TrendingUp, Users, ArrowUpRight, ArrowDownRight, CheckCircle2, Landmark } from "lucide-react";
 import Link from "next/link";
 import { RakebackChart } from "@/components/charts/RakebackBarChart";
 
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <DataCard
           title="Saldo Disponible"
           value={user.availableBalance}
@@ -153,6 +153,14 @@ export default async function DashboardPage() {
           icon={<Users className="h-5 w-5" />}
           color="white"
           subtitle="Gana meses VIP y % creciente del rakeback extra de tus referidos"
+        />
+        <DataCard
+          title="Saldo Invertido"
+          value={0}
+          format="currency"
+          icon={<Landmark className="h-5 w-5 text-mpd-amber" />}
+          color="amber"
+          subtitle="Sujeto a inversiones MPD, bancajes y Staking MPD. Sujeto a riesgo. Rentabilidad media variable ~6-7% mensual"
         />
       </div>
 

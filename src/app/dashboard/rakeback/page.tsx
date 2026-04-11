@@ -127,6 +127,38 @@ export default async function RakebackPage() {
         </CardContent>
       </Card>
 
+      {/* Transparencia de Cálculo */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">¿Cómo se calcula tu rakeback?</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="space-y-3 text-sm text-mpd-gray">
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">1</span>
+              <p><span className="text-mpd-white font-medium">Rake generado:</span> cada vez que juegas, la sala cobra una comisión (rake). Este dato se importa directamente desde la sala.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">2</span>
+              <p><span className="text-mpd-white font-medium">NGR (Net Gaming Revenue):</span> al rake generado se le restan las bonificaciones y promociones que la sala te haya dado directamente. El resultado es el NGR.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">3</span>
+              <p><span className="text-mpd-white font-medium">Porcentaje negociado:</span> MPD aplica sobre el NGR el porcentaje de rakeback negociado con cada sala. Este % es superior al estándar gracias a nuestros acuerdos.</p>
+            </div>
+            <div className="flex items-start gap-3">
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">4</span>
+              <p><span className="text-mpd-white font-medium">Tu rakeback:</span> el resultado se acumula como saldo en tu cuenta MPD. Puedes usarlo en servicios o solicitar retiro.</p>
+            </div>
+          </div>
+          <div className="mt-4 p-3 rounded-lg bg-mpd-black/50 border border-mpd-border">
+            <p className="text-xs text-mpd-gray-dark">
+              Los datos se actualizan periódicamente según los reportes de cada sala. Si tienes dudas sobre algún cálculo específico, contacta con soporte.
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader>
           <CardTitle className="text-base">Historial de Rakeback</CardTitle>
