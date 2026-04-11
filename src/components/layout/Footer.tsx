@@ -35,8 +35,9 @@ export function Footer() {
           <div>
             <h4 className="text-sm font-semibold text-mpd-white mb-4">Comunidad</h4>
             <ul className="space-y-2">
-              <li><a href="#" className="text-sm text-mpd-gray hover:text-mpd-gold transition-colors">Discord</a></li>
-              <li><a href="#" className="text-sm text-mpd-gray hover:text-mpd-gold transition-colors">Instagram</a></li>
+              {/* TODO: Reemplazar [PENDING_URL] con URLs reales de Discord e Instagram */}
+              <li><a href="[PENDING_URL]" className="text-sm text-mpd-gray hover:text-mpd-gold transition-colors">Discord</a></li>
+              <li><a href="[PENDING_URL]" className="text-sm text-mpd-gray hover:text-mpd-gold transition-colors">Instagram</a></li>
             </ul>
           </div>
         </div>

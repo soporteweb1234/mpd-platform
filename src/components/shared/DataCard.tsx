@@ -10,6 +10,7 @@ interface DataCardProps {
   trend?: number;
   trendLabel?: string;
   color?: "gold" | "green" | "amber" | "red" | "white";
+  subtitle?: string;
   className?: string;
 }
 
@@ -21,6 +22,7 @@ export function DataCard({
   trend,
   trendLabel,
   color = "white",
+  subtitle,
   className,
 }: DataCardProps) {
   const colorClasses = {
@@ -52,6 +54,9 @@ export function DataCard({
         <p className={cn("text-2xl font-bold font-mono", colorClasses[color])}>
           {formatValue(value)}
         </p>
+        {subtitle && (
+          <p className="text-[11px] text-mpd-gray-dark mt-1 leading-snug">{subtitle}</p>
+        )}
         {trend !== undefined && (
           <div className="flex items-center gap-1 mt-2">
             {trend >= 0 ? (

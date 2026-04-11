@@ -41,22 +41,18 @@ export default function LandingPage() {
               </Button>
               <Button variant="outline" size="lg" asChild>
                 <Link href="/register">
-                  Únete Gratis <ArrowRight className="ml-2 h-4 w-4" />
+                  Únete Ahora <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
               </Button>
             </div>
             <div className="mt-12 flex items-center gap-8 text-sm text-mpd-gray">
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-mpd-green" />
-                100+ jugadores activos
+                Rakeback optimizado en las mejores salas
               </div>
               <div className="flex items-center gap-2">
                 <div className="h-2 w-2 rounded-full bg-mpd-gold" />
-                5 salas disponibles
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="h-2 w-2 rounded-full bg-mpd-green" />
-                €50.000+ distribuidos
+                Ecosistema integral para jugadores
               </div>
             </div>
           </div>
@@ -73,8 +69,8 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             {[
-              { step: "01", icon: <Users className="h-6 w-6" />, title: "Regístrate", desc: "Crea tu cuenta gratis y cuéntanos tu nivel de juego" },
-              { step: "02", icon: <BarChart3 className="h-6 w-6" />, title: "Elige tu sala", desc: "Te recomendamos la mejor sala y te guiamos en el alta" },
+              { step: "01", icon: <Users className="h-6 w-6" />, title: "Regístrate", desc: "Crea tu cuenta y cuéntanos tu nivel de juego" },
+              { step: "02", icon: <BarChart3 className="h-6 w-6" />, title: "Elige tu sala", desc: "Analizamos tu perfil, stake, situación particular y temporalidad para recomendarte la opción con mejor relación calidad-precio para ti" },
               { step: "03", icon: <Zap className="h-6 w-6" />, title: "Juega", desc: "Juega como siempre. Tu rakeback se acumula automáticamente" },
               { step: "04", icon: <Wallet className="h-6 w-6" />, title: "Canjea", desc: "Usa tu saldo en servicios premium o retíralo" },
             ].map((item) => (
@@ -105,12 +101,12 @@ export default function LandingPage() {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
-              { icon: <TrendingUp className="h-5 w-5" />, title: "Rakeback Optimizado", desc: "Los mejores % de rakeback negociados con las principales salas", badge: "Core" },
-              { icon: <Shield className="h-5 w-5" />, title: "VPN Profesional", desc: "IP residencial dedicada para jugar sin restricciones", badge: "Disponible" },
-              { icon: <Database className="h-5 w-5" />, title: "Datamining", desc: "Millones de manos actualizadas semanalmente de todas las salas", badge: "Disponible" },
-              { icon: <Wrench className="h-5 w-5" />, title: "Herramientas con Descuento", desc: "HUDs, solvers y software a precio especial para miembros", badge: "Disponible" },
-              { icon: <GraduationCap className="h-5 w-5" />, title: "Cursos y Coaching", desc: "Formación trimestral con profesionales y sesiones 1-on-1", badge: "Disponible" },
-              { icon: <Wallet className="h-5 w-5" />, title: "Bancaje Selectivo", desc: "Financiación parcial de bankroll para jugadores cualificados", badge: "Selectivo" },
+              { icon: <TrendingUp className="h-5 w-5" />, title: "Rakeback Optimizado", desc: "Los mejores % de rakeback negociados con las principales salas", badge: "Core", special: false },
+              { icon: <Shield className="h-5 w-5" />, title: "Servicios de Conexión", desc: "Soluciones de conectividad profesional adaptadas a tu situación", badge: "Especial", special: true },
+              { icon: <Database className="h-5 w-5" />, title: "Datamining", desc: "Millones de manos de todas las salas para mejorar tu análisis", badge: "Disponible", special: false },
+              { icon: <Wrench className="h-5 w-5" />, title: "Herramientas con Descuento", desc: "HUDs, solvers, scripts y software a precio de grupo", badge: "Disponible", special: false },
+              { icon: <GraduationCap className="h-5 w-5" />, title: "Sesiones de Estudio y Coaching", desc: "Formación trimestral con profesionales y sesiones 1-on-1", badge: "Disponible", special: false },
+              { icon: <Wallet className="h-5 w-5" />, title: "Bancaje Selectivo", desc: "Financiación parcial de bankroll para jugadores cualificados", badge: "Selectivo", special: false },
             ].map((item) => (
               <Card key={item.title} className="group hover:border-mpd-gold/30 transition-colors">
                 <CardContent className="p-6">
@@ -118,12 +114,17 @@ export default function LandingPage() {
                     <div className="h-10 w-10 rounded-xl bg-mpd-gold/10 flex items-center justify-center text-mpd-gold group-hover:bg-mpd-gold/20 transition-colors">
                       {item.icon}
                     </div>
-                    <Badge variant={item.badge === "Core" ? "default" : item.badge === "Selectivo" ? "warning" : "success"} className="text-[10px]">
+                    <Badge variant={item.badge === "Core" ? "default" : item.badge === "Selectivo" ? "warning" : item.badge === "Especial" ? "outline" : "success"} className="text-[10px]">
                       {item.badge}
                     </Badge>
                   </div>
                   <h3 className="font-semibold text-mpd-white">{item.title}</h3>
                   <p className="mt-1 text-sm text-mpd-gray">{item.desc}</p>
+                  {item.special && (
+                    <Link href="/contacto" className="inline-block mt-2 text-xs text-mpd-amber hover:text-mpd-gold transition-colors">
+                      Requiere servicios especiales (+info)
+                    </Link>
+                  )}
                 </CardContent>
               </Card>
             ))}
@@ -143,7 +144,7 @@ export default function LandingPage() {
               { q: "¿Qué es el rakeback?", a: "Es un porcentaje del rake (comisión) que generas jugando poker online y que se te devuelve. Con MPD, negociamos los mejores porcentajes y te lo acumulamos como saldo interno." },
               { q: "¿Tiene algún coste registrarse?", a: "No. El registro en MPD es completamente gratuito. Solo necesitas registrarte en una de nuestras salas afiliadas con nuestro código." },
               { q: "¿Cómo funciona el saldo interno?", a: "Tu rakeback se acumula como crédito dentro de MPD. Puedes usarlo para comprar servicios (VPN, datamining, cursos) o solicitarlo como retiro." },
-              { q: "¿Necesito VPN para jugar?", a: "Depende de la sala y tu país. Algunas salas tienen restricciones geográficas. MPD ofrece VPN residencial y comercial para estos casos." },
+              { q: "¿Puedo jugar en todas las salas?", a: "El acceso a cada sala puede depender de tu ubicación y situación particular. Contacta con nuestro equipo y te asesoramos sobre las opciones disponibles para tu caso." },
               { q: "¿Qué salas están disponibles?", a: "Trabajamos con PokerStars, GGPoker, 888poker, WPT Global e iPoker Network. Estamos constantemente negociando con nuevas salas." },
               { q: "¿Puedo referir a otros jugadores?", a: "Sí. Cada usuario tiene un código de referido único. Cuando alguien se registra con tu código, recibes comisiones por su actividad." },
             ].map((item, i) => (
@@ -173,7 +174,7 @@ export default function LandingPage() {
           <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
             <Button size="lg" asChild>
               <Link href="/register">
-                Crear Cuenta Gratis <ArrowRight className="ml-2 h-4 w-4" />
+                Crear Cuenta <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
             <Button variant="outline" size="lg" asChild>

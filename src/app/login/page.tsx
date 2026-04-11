@@ -18,7 +18,7 @@ export default function LoginPage() {
         <p className="mt-6 text-center text-sm text-mpd-gray">
           ¿No tienes cuenta?{" "}
           <Link href="/register" className="text-mpd-gold hover:underline">
-            Regístrate gratis
+            Regístrate
           </Link>
         </p>
       </CardContent>

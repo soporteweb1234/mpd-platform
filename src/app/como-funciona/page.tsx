@@ -12,7 +12,7 @@ export const metadata = {
 
 export default function ComoFuncionaPage() {
   const steps = [
-    { icon: <Users className="h-8 w-8" />, title: "1. Regístrate gratis", description: "Crea tu cuenta en Manager Poker Deal. Solo necesitas un email y 2 minutos. Cuéntanos tu nivel de juego y tus objetivos para personalizar tu experiencia." },
+    { icon: <Users className="h-8 w-8" />, title: "1. Regístrate", description: "Crea tu cuenta en Manager Poker Deal. Solo necesitas un email y 2 minutos. Cuéntanos tu nivel de juego y tus objetivos para personalizar tu experiencia." },
     { icon: <BarChart3 className="h-8 w-8" />, title: "2. Elige tu sala", description: "Te recomendamos la sala que mejor se adapta a tu perfil y te guiamos paso a paso en el proceso de alta. Usa nuestro código de afiliación para activar tu rakeback premium." },
     { icon: <Zap className="h-8 w-8" />, title: "3. Juega como siempre", description: "Juega tus sesiones normales. Tu rakeback se calcula automáticamente y se acumula en tu saldo interno de MPD. Sin cambiar nada en tu forma de jugar." },
     { icon: <Wallet className="h-8 w-8" />, title: "4. Canjea tu saldo", description: "Usa tu saldo acumulado para comprar servicios premium (VPN, datamining, coaching) o solicita un retiro. Tú decides cómo usar tu rakeback." },

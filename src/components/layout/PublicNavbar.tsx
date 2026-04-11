@@ -51,7 +51,7 @@ export function PublicNavbar() {
             <Link href="/login">Iniciar Sesión</Link>
           </Button>
           <Button size="sm" asChild>
-            <Link href="/register">Únete Gratis</Link>
+            <Link href="/register">Únete</Link>
           </Button>
         </div>
 
@@ -88,7 +88,7 @@ export function PublicNavbar() {
               <Link href="/login">Iniciar Sesión</Link>
             </Button>
             <Button size="sm" className="flex-1" asChild>
-              <Link href="/register">Únete Gratis</Link>
+              <Link href="/register">Únete</Link>
             </Button>
           </div>
         </div>

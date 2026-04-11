@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { BadgeStratum } from "@/components/shared/BadgeStratum";
 import { formatCurrency, formatDate, getStratumLabel } from "@/lib/utils";
 import { STRATUM_THRESHOLDS } from "@/lib/constants";
-import { Wallet, Clock, TrendingUp, Users, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { Wallet, Clock, TrendingUp, Users, ArrowUpRight, ArrowDownRight, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { RakebackChart } from "@/components/charts/RakebackBarChart";
 
@@ -119,15 +119,17 @@ export default async function DashboardPage() {
           title="Saldo Disponible"
           value={user.availableBalance}
           format="currency"
-          icon={<Wallet className="h-5 w-5" />}
+          icon={<CheckCircle2 className="h-5 w-5 text-mpd-green" />}
           color="green"
+          subtitle="Disponible totalmente para uso o retiro"
         />
         <DataCard
           title="Saldo Pendiente"
           value={user.pendingBalance}
           format="currency"
-          icon={<Clock className="h-5 w-5" />}
+          icon={<Clock className="h-5 w-5 text-mpd-amber" />}
           color="amber"
+          subtitle={`Rakeback mes ${new Date(new Date().getFullYear(), new Date().getMonth() - 1).toLocaleDateString("es-ES", { month: "long" })} — Estimación: lo conseguido menos servicios contratados y promociones. No vinculante.`}
         />
         <DataCard
           title="Rakeback del Mes"
