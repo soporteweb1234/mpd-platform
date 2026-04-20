@@ -8,6 +8,7 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { TrendingUp, DollarSign, Calendar, Info } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { CheckCircle2, X } from "lucide-react";
+import { RakebackPdfButton } from "@/components/dashboard/RakebackPdfButton";
 
 export const metadata = { title: "Rakeback" };
 
@@ -15,11 +16,17 @@ export default async function RakebackPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const records = await prisma.rakebackRecord.findMany({
-    where: { userId: session.user.id },
-    include: { room: { select: { name: true, logo: true } } },
-    orderBy: { periodStart: "desc" },
-  });
+  const [records, user] = await Promise.all([
+    prisma.rakebackRecord.findMany({
+      where: { userId: session.user.id },
+      include: { room: { select: { name: true, logo: true } } },
+      orderBy: { periodStart: "desc" },
+    }),
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { name: true },
+    }),
+  ]);
 
   const totalRakeback = records.reduce((sum, r) => sum + r.rakebackAmount, 0);
   const totalRake = records.reduce((sum, r) => sum + r.rakeGenerated, 0);
@@ -43,7 +50,20 @@ export default async function RakebackPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold text-mpd-white">Rakeback</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-mpd-white">Rakeback</h1>
+        <RakebackPdfButton
+          records={records.map((r) => ({
+            period: r.period,
+            roomName: r.room.name,
+            rakeGenerated: r.rakeGenerated,
+            rakebackPercent: r.rakebackPercent,
+            rakebackAmount: r.rakebackAmount,
+            status: r.status,
+          }))}
+          userName={user?.name ?? session.user.email ?? "Jugador"}
+        />
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <DataCard
