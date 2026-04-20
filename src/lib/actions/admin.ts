@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
+import { creditBalance, debitBalance } from "@/lib/wallet";
 import {
   rakebackLoadSchema,
   balanceAdjustSchema,
@@ -24,17 +25,14 @@ export async function loadRakeback(input: RakebackLoadInput) {
 
   const rakebackAmount = (data.rakeGenerated * data.rakebackPercent) / 100;
 
-  const user = await prisma.user.findUnique({
+  const userExists = await prisma.user.findUnique({
     where: { id: data.userId },
-    select: { availableBalance: true, totalRakeback: true },
+    select: { id: true },
   });
+  if (!userExists) return { error: "Usuario no encontrado" };
 
-  if (!user) return { error: "Usuario no encontrado" };
-
-  const balanceAfter = user.availableBalance.plus(rakebackAmount);
-
-  await prisma.$transaction([
-    prisma.rakebackRecord.create({
+  await prisma.$transaction(async (tx) => {
+    await tx.rakebackRecord.create({
       data: {
         userId: data.userId,
         roomId: data.roomId,
@@ -49,28 +47,26 @@ export async function loadRakeback(input: RakebackLoadInput) {
         loadedAt: new Date(),
         notes: data.notes,
       },
-    }),
-    prisma.balanceTransaction.create({
-      data: {
-        userId: data.userId,
-        type: "RAKEBACK_CREDIT",
-        amount: rakebackAmount,
-        balanceBefore: user.availableBalance.toNumber(),
-        balanceAfter: balanceAfter.toNumber(),
-        description: `Rakeback ${data.period} - ${data.rakebackPercent}% de €${data.rakeGenerated.toFixed(2)}`,
-        referenceType: "RAKEBACK",
-        createdBy: session.user.id,
-      },
-    }),
-    prisma.user.update({
+    });
+
+    await creditBalance(
+      tx,
+      data.userId,
+      rakebackAmount,
+      "RAKEBACK_CREDIT",
+      `Rakeback ${data.period} - ${data.rakebackPercent}% de €${data.rakeGenerated.toFixed(2)}`,
+      session.user.id,
+      "RAKEBACK",
+    );
+
+    await tx.user.update({
       where: { id: data.userId },
       data: {
-        availableBalance: { increment: rakebackAmount },
         totalRakeback: { increment: rakebackAmount },
         lifetimeEarnings: { increment: rakebackAmount },
       },
-    }),
-  ]);
+    });
+  });
 
   return { success: true };
 }
@@ -89,39 +85,69 @@ export async function updateUserBalances(data: {
 
   const user = await prisma.user.findUnique({
     where: { id: data.userId },
-    select: { availableBalance: true },
+    select: {
+      availableBalance: true,
+      pendingBalance: true,
+      totalRakeback: true,
+      investedBalance: true,
+    },
   });
   if (!user) return { error: "Usuario no encontrado" };
 
-  const newBalance = new Prisma.Decimal(data.availableBalance);
-  const delta = newBalance.minus(user.availableBalance);
+  const availableDelta = new Prisma.Decimal(data.availableBalance).minus(user.availableBalance);
+  const pendingDelta = new Prisma.Decimal(data.pendingBalance).minus(user.pendingBalance);
+  const totalRakebackDelta = new Prisma.Decimal(data.totalRakeback).minus(user.totalRakeback);
+  const investedDelta = new Prisma.Decimal(data.investedBalance).minus(user.investedBalance);
 
-  await prisma.$transaction([
-    ...(!delta.isZero()
-      ? [
-          prisma.balanceTransaction.create({
-            data: {
-              userId: data.userId,
-              type: "MANUAL_ADJUSTMENT",
-              amount: delta.toNumber(),
-              balanceBefore: user.availableBalance.toNumber(),
-              balanceAfter: newBalance.toNumber(),
-              description: "Ajuste manual de saldo por admin",
-              createdBy: session.user.id,
-            },
-          }),
-        ]
-      : []),
-    prisma.user.update({
-      where: { id: data.userId },
-      data: {
-        availableBalance: data.availableBalance,
-        pendingBalance: data.pendingBalance,
-        totalRakeback: data.totalRakeback,
-        investedBalance: data.investedBalance,
-      },
-    }),
-  ]);
+  try {
+    await prisma.$transaction(async (tx) => {
+      // availableBalance se mueve vía ledger (credit/debit)
+      if (!availableDelta.isZero()) {
+        if (availableDelta.isPositive()) {
+          await creditBalance(
+            tx,
+            data.userId,
+            availableDelta.toNumber(),
+            "MANUAL_ADJUSTMENT",
+            "Ajuste manual de saldo por admin",
+            session.user.id,
+          );
+        } else {
+          await debitBalance(
+            tx,
+            data.userId,
+            availableDelta.abs().toNumber(),
+            "MANUAL_ADJUSTMENT",
+            "Ajuste manual de saldo por admin",
+            session.user.id,
+          );
+        }
+      }
+
+      // Campos no-ledgered: increment atómico por delta
+      const nonLedgered: Prisma.UserUpdateInput = {};
+      if (!pendingDelta.isZero()) {
+        nonLedgered.pendingBalance = { increment: pendingDelta.toNumber() };
+      }
+      if (!totalRakebackDelta.isZero()) {
+        nonLedgered.totalRakeback = { increment: totalRakebackDelta.toNumber() };
+      }
+      if (!investedDelta.isZero()) {
+        nonLedgered.investedBalance = { increment: investedDelta.toNumber() };
+      }
+      if (Object.keys(nonLedgered).length > 0) {
+        await tx.user.update({
+          where: { id: data.userId },
+          data: nonLedgered,
+        });
+      }
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === "Saldo insuficiente") {
+      return { error: "Saldo insuficiente para aplicar el ajuste" };
+    }
+    throw err;
+  }
 
   return { success: true };
 }
@@ -138,38 +164,44 @@ export async function adjustBalance(input: BalanceAdjustInput) {
   }
   const data = parsed.data;
 
-  const user = await prisma.user.findUnique({
+  const userExists = await prisma.user.findUnique({
     where: { id: data.userId },
-    select: { availableBalance: true },
+    select: { id: true },
   });
+  if (!userExists) return { error: "Usuario no encontrado" };
 
-  if (!user) return { error: "Usuario no encontrado" };
-
-  const balanceAfter = user.availableBalance.plus(data.amount);
-  if (balanceAfter.lessThan(0)) {
-    return { error: "El saldo no puede quedar negativo" };
+  try {
+    await prisma.$transaction(async (tx) => {
+      if (data.amount > 0) {
+        await creditBalance(
+          tx,
+          data.userId,
+          data.amount,
+          "MANUAL_ADJUSTMENT",
+          data.description,
+          session.user.id,
+        );
+        await tx.user.update({
+          where: { id: data.userId },
+          data: { lifetimeEarnings: { increment: data.amount } },
+        });
+      } else {
+        await debitBalance(
+          tx,
+          data.userId,
+          Math.abs(data.amount),
+          "MANUAL_ADJUSTMENT",
+          data.description,
+          session.user.id,
+        );
+      }
+    });
+  } catch (err) {
+    if (err instanceof Error && err.message === "Saldo insuficiente") {
+      return { error: "El saldo no puede quedar negativo" };
+    }
+    throw err;
   }
-
-  await prisma.$transaction([
-    prisma.balanceTransaction.create({
-      data: {
-        userId: data.userId,
-        type: "MANUAL_ADJUSTMENT",
-        amount: data.amount,
-        balanceBefore: user.availableBalance.toNumber(),
-        balanceAfter: balanceAfter.toNumber(),
-        description: data.description,
-        createdBy: session.user.id,
-      },
-    }),
-    prisma.user.update({
-      where: { id: data.userId },
-      data: {
-        availableBalance: { increment: data.amount },
-        lifetimeEarnings: data.amount > 0 ? { increment: data.amount } : undefined,
-      },
-    }),
-  ]);
 
   return { success: true };
 }
