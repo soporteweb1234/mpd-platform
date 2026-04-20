@@ -171,7 +171,7 @@ export default async function RakebackPage() {
                   <tr className="border-b border-mpd-border">
                     <th className="text-left py-3 px-2 text-mpd-gray font-medium">Período</th>
                     <th className="text-left py-3 px-2 text-mpd-gray font-medium">Sala</th>
-                    <th className="text-right py-3 px-2 text-mpd-gray font-medium">Rake</th>
+                    <th className="text-right py-3 px-2 text-mpd-gray font-medium">Comisión NGR</th>
                     <th className="text-right py-3 px-2 text-mpd-gray font-medium">%</th>
                     <th className="text-right py-3 px-2 text-mpd-gray font-medium">Rakeback</th>
                     <th className="text-center py-3 px-2 text-mpd-gray font-medium">Estado</th>
