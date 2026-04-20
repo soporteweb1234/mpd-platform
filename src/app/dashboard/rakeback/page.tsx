@@ -4,11 +4,11 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataCard } from "@/components/shared/DataCard";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency, formatDate } from "@/lib/utils";
-import { TrendingUp, DollarSign, Calendar, Info } from "lucide-react";
+import { formatCurrency } from "@/lib/utils";
+import { TrendingUp, CalendarDays, Percent, Trophy, Info, CheckCircle2, X } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
-import { CheckCircle2, X } from "lucide-react";
 import { RakebackPdfButton } from "@/components/dashboard/RakebackPdfButton";
+import { RakebackChart } from "@/components/charts/RakebackBarChart";
 
 export const metadata = { title: "Rakeback" };
 
@@ -31,6 +31,42 @@ export default async function RakebackPage() {
   const totalRakeback = records.reduce((sum, r) => sum + r.rakebackAmount, 0);
   const totalRake = records.reduce((sum, r) => sum + r.rakeGenerated, 0);
   const avgPercent = totalRake > 0 ? (totalRakeback / totalRake) * 100 : 0;
+
+  // Rakeback del mes en curso (período cuyo inicio cae dentro del mes actual)
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+  const nextMonthStart = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+  const monthRakeback = records
+    .filter((r) => r.periodStart >= monthStart && r.periodStart < nextMonthStart)
+    .reduce((sum, r) => sum + r.rakebackAmount, 0);
+
+  // Sala con más rakeback acumulado
+  const byRoom = new Map<string, number>();
+  for (const r of records) {
+    byRoom.set(r.room.name, (byRoom.get(r.room.name) ?? 0) + r.rakebackAmount);
+  }
+  const topRoom = [...byRoom.entries()]
+    .sort(([, a], [, b]) => b - a)
+    .map(([name, amount]) => ({ name, amount }))[0];
+
+  // Datos para la gráfica: agrupados por mes, orden cronológico
+  const byMonth = new Map<number, { month: string; amount: number }>();
+  for (const r of records) {
+    const d = new Date(r.periodStart);
+    const sortKey = d.getFullYear() * 12 + d.getMonth();
+    const label = d
+      .toLocaleDateString("es-ES", { month: "short", year: "2-digit" })
+      .replace(".", "");
+    const existing = byMonth.get(sortKey);
+    if (existing) {
+      existing.amount += r.rakebackAmount;
+    } else {
+      byMonth.set(sortKey, { month: label, amount: r.rakebackAmount });
+    }
+  }
+  const chartData = [...byMonth.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([, v]) => ({ ...v, amount: Number(v.amount.toFixed(2)) }));
 
   const statusColors: Record<string, string> = {
     PENDING: "warning",
@@ -65,29 +101,66 @@ export default async function RakebackPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <DataCard
           title="Rakeback Total"
           value={totalRakeback}
           format="currency"
           icon={<TrendingUp className="h-5 w-5" />}
           color="gold"
+          subtitle="Acumulado desde tu registro"
         />
         <DataCard
-          title="Rake Total Generado"
-          value={totalRake}
+          title="Rakeback Este Mes"
+          value={monthRakeback}
           format="currency"
-          icon={<DollarSign className="h-5 w-5" />}
-          color="white"
+          icon={<CalendarDays className="h-5 w-5" />}
+          color="green"
+          subtitle={now.toLocaleDateString("es-ES", { month: "long", year: "numeric" })}
         />
         <DataCard
           title="% Medio Rakeback"
           value={avgPercent}
           format="percent"
-          icon={<Calendar className="h-5 w-5" />}
-          color="green"
+          icon={<Percent className="h-5 w-5" />}
+          color="white"
+          subtitle="Sobre el NGR total generado"
         />
+        <Card className="hover:border-mpd-border-light transition-colors">
+          <CardContent className="p-5">
+            <div className="flex items-center justify-between mb-3">
+              <span className="text-xs text-mpd-gray uppercase tracking-wider font-medium">
+                Top Sala
+              </span>
+              <Trophy className="h-5 w-5 text-mpd-gold" />
+            </div>
+            <p className="text-2xl font-bold font-mono text-mpd-gold truncate">
+              {topRoom?.name ?? "—"}
+            </p>
+            <p className="text-[11px] text-mpd-gray-dark mt-1 leading-snug">
+              {topRoom
+                ? `${formatCurrency(topRoom.amount)} de rakeback generado`
+                : "Sin datos todavía"}
+            </p>
+          </CardContent>
+        </Card>
       </div>
+
+      {/* Histograma mensual */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Evolución mensual</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {chartData.length > 0 ? (
+            <RakebackChart data={chartData} />
+          ) : (
+            <div className="flex items-center justify-center h-[220px] text-sm text-mpd-gray">
+              Aún no tienes datos de rakeback para graficar
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* NGR Explanation */}
       <Card className="border-mpd-gold/20">
