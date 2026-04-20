@@ -37,6 +37,7 @@ export const authConfig = {
     async authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
       const pathname = request.nextUrl.pathname;
+      const role = (auth?.user as Record<string, unknown>)?.role;
 
       // Public routes — no auth required
       if (
@@ -52,9 +53,16 @@ export const authConfig = {
         pathname.startsWith("/ref/") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/chat") ||
-        pathname.startsWith("/api/admin") ||
         pathname.startsWith("/api/discord")
       ) {
+        return true;
+      }
+
+      // Admin API routes — require ADMIN or SUPER_ADMIN, JSON 401 otherwise
+      if (pathname.startsWith("/api/admin")) {
+        if (!isLoggedIn || (role !== "ADMIN" && role !== "SUPER_ADMIN")) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
         return true;
       }
 
@@ -63,9 +71,8 @@ export const authConfig = {
         return Response.redirect(new URL("/login", request.nextUrl));
       }
 
-      // Admin routes — require ADMIN or SUPER_ADMIN role
+      // Admin UI routes — require ADMIN or SUPER_ADMIN role
       if (pathname.startsWith("/admin")) {
-        const role = (auth?.user as Record<string, unknown>)?.role;
         if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
           return Response.redirect(new URL("/dashboard", request.nextUrl));
         }

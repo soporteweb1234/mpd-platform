@@ -3,21 +3,24 @@
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
+import {
+  rakebackLoadSchema,
+  balanceAdjustSchema,
+  type RakebackLoadInput,
+  type BalanceAdjustInput,
+} from "@/lib/validations";
 
-export async function loadRakeback(data: {
-  userId: string;
-  roomId: string;
-  period: string;
-  periodStart: string;
-  periodEnd: string;
-  rakeGenerated: number;
-  rakebackPercent: number;
-  notes?: string;
-}) {
+export async function loadRakeback(input: RakebackLoadInput) {
   const session = await auth();
   if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
     return { error: "No autorizado" };
   }
+
+  const parsed = rakebackLoadSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+  const data = parsed.data;
 
   const rakebackAmount = (data.rakeGenerated * data.rakebackPercent) / 100;
 
@@ -123,15 +126,17 @@ export async function updateUserBalances(data: {
   return { success: true };
 }
 
-export async function adjustBalance(data: {
-  userId: string;
-  amount: number;
-  description: string;
-}) {
+export async function adjustBalance(input: BalanceAdjustInput) {
   const session = await auth();
   if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
     return { error: "No autorizado" };
   }
+
+  const parsed = balanceAdjustSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0].message };
+  }
+  const data = parsed.data;
 
   const user = await prisma.user.findUnique({
     where: { id: data.userId },
