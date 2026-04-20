@@ -102,7 +102,7 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {[
               { icon: <TrendingUp className="h-5 w-5" />, title: "Rakeback Optimizado", desc: "Los mejores % de rakeback negociados con las principales salas", badge: "Core", special: false },
-              { icon: <Shield className="h-5 w-5" />, title: "Servicios de Conexión", desc: "Soluciones de conectividad profesional adaptadas a tu situación", badge: "Especial", special: true },
+              { icon: <Shield className="h-5 w-5" />, title: "Redes", desc: "Soluciones de conectividad profesional adaptadas a tu situación", badge: "Especial", special: true },
               { icon: <Database className="h-5 w-5" />, title: "Datamining", desc: "Millones de manos de todas las salas para mejorar tu análisis", badge: "Disponible", special: false },
               { icon: <Wrench className="h-5 w-5" />, title: "Herramientas con Descuento", desc: "HUDs, solvers, scripts y software a precio de grupo", badge: "Disponible", special: false },
               { icon: <GraduationCap className="h-5 w-5" />, title: "Sesiones de Estudio y Coaching", desc: "Formación trimestral con profesionales y sesiones 1-on-1", badge: "Disponible", special: false },

@@ -12,7 +12,7 @@ export const metadata = {
 };
 
 const services = [
-  { icon: <Shield className="h-6 w-6" />, title: "Servicios de Conexión", price: "Consultar", desc: "Soluciones de conectividad profesional adaptadas a tu situación y necesidades.", features: ["Configuración personalizada", "Conexión estable 24/7", "Soporte técnico dedicado"], available: true, special: true },
+  { icon: <Shield className="h-6 w-6" />, title: "Redes", price: "Consultar", desc: "Soluciones de conectividad profesional adaptadas a tu situación y necesidades.", features: ["Configuración personalizada", "Conexión estable 24/7", "Soporte técnico dedicado"], available: true, special: true },
   { icon: <Database className="h-6 w-6" />, title: "Datamining", price: "€30/mes", desc: "Paquete de datos de manos de las principales salas para mejorar tu análisis.", features: ["Millones de manos", "Todas las salas principales", "Formato HM3/PT4"], available: true, special: false },
   { icon: <Wrench className="h-6 w-6" />, title: "PokerTracker 4", price: "€70", desc: "Licencia de PokerTracker 4 a precio de grupo.", features: ["Licencia completa", "Descuento exclusivo", "Soporte instalación"], available: true, special: false },
   { icon: <Wrench className="h-6 w-6" />, title: "PioSolver", price: "€200", desc: "Licencia de PioSolver a precio de grupo.", features: ["Licencia PioSolver", "Precio de grupo", "Guía de uso"], available: true, special: false },
