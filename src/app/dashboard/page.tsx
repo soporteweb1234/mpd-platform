@@ -87,14 +87,19 @@ export default async function DashboardPage() {
   const data = await getDashboardData(session.user.id);
   const { user } = data;
 
+  // Decimal → number para la capa de UI
+  const availableBalance = user.availableBalance.toNumber();
+  const pendingBalance = user.pendingBalance.toNumber();
+  const totalRakeback = user.totalRakeback.toNumber();
+
   // Calcular progreso de estrato
   const strataOrder = ["NOVATO", "SEMI_PRO", "PROFESIONAL", "REFERENTE"] as const;
   const currentIndex = strataOrder.indexOf(user.stratum);
   const nextStratum = currentIndex < strataOrder.length - 1 ? strataOrder[currentIndex + 1] : null;
   const currentThreshold = STRATUM_THRESHOLDS[user.stratum];
-  const nextThreshold = nextStratum ? STRATUM_THRESHOLDS[nextStratum] : user.totalRakeback;
+  const nextThreshold = nextStratum ? STRATUM_THRESHOLDS[nextStratum] : totalRakeback;
   const progress = nextStratum
-    ? Math.min(((user.totalRakeback - currentThreshold) / (nextThreshold - currentThreshold)) * 100, 100)
+    ? Math.min(((totalRakeback - currentThreshold) / (nextThreshold - currentThreshold)) * 100, 100)
     : 100;
 
   // Agrupar rakeback por mes para la gráfica
@@ -117,7 +122,7 @@ export default async function DashboardPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <DataCard
           title="Saldo Disponible"
-          value={user.availableBalance}
+          value={availableBalance}
           format="currency"
           icon={<CheckCircle2 className="h-5 w-5 text-mpd-green" />}
           color="green"
@@ -125,7 +130,7 @@ export default async function DashboardPage() {
         />
         <DataCard
           title="Saldo Pendiente"
-          value={user.pendingBalance}
+          value={pendingBalance}
           format="currency"
           icon={<Clock className="h-5 w-5 text-mpd-amber" />}
           color="amber"
@@ -133,7 +138,7 @@ export default async function DashboardPage() {
         />
         <DataCard
           title="Saldo Ganado Total"
-          value={user.totalRakeback}
+          value={totalRakeback}
           format="currency"
           icon={<TrendingUp className="h-5 w-5 text-mpd-gold" />}
           color="gold"
@@ -201,7 +206,7 @@ export default async function DashboardPage() {
             </div>
             {nextStratum && (
               <p className="text-xs text-mpd-gray">
-                Genera {formatCurrency(nextThreshold - user.totalRakeback)} más de rakeback para alcanzar{" "}
+                Genera {formatCurrency(nextThreshold - totalRakeback)} más de rakeback para alcanzar{" "}
                 <span className="text-mpd-gold">{getStratumLabel(nextStratum)}</span>
               </p>
             )}

@@ -30,7 +30,7 @@ export async function DashboardLayout({ children }: { children: React.ReactNode 
           avatar: user.avatar,
           stratum: user.stratum,
           role: user.role,
-          availableBalance: user.availableBalance,
+          availableBalance: user.availableBalance.toNumber(),
         }}
         type="dashboard"
       />

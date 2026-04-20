@@ -93,8 +93,8 @@ export default async function AdminUsersPage({
                     </td>
                     <td className="py-3 px-4 text-center"><BadgeStratum stratum={u.stratum} /></td>
                     <td className="py-3 px-4 text-center"><BadgeStatus status={u.status} /></td>
-                    <td className="py-3 px-4 text-right font-mono text-mpd-green">{formatCurrency(u.totalRakeback)}</td>
-                    <td className="py-3 px-4 text-right font-mono text-mpd-white">{formatCurrency(u.availableBalance)}</td>
+                    <td className="py-3 px-4 text-right font-mono text-mpd-green">{formatCurrency(u.totalRakeback.toNumber())}</td>
+                    <td className="py-3 px-4 text-right font-mono text-mpd-white">{formatCurrency(u.availableBalance.toNumber())}</td>
                     <td className="py-3 px-4 text-right text-mpd-gray">{formatDate(u.createdAt)}</td>
                     <td className="py-3 px-4 text-center">
                       <Button variant="ghost" size="sm" asChild>

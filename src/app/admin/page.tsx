@@ -82,7 +82,7 @@ export default async function AdminDashboardPage() {
         />
         <DataCard
           title="Saldo Circulante"
-          value={totalBalance._sum.availableBalance ?? 0}
+          value={totalBalance._sum.availableBalance?.toNumber() ?? 0}
           format="currency"
           icon={<Wallet className="h-5 w-5" />}
           color="amber"

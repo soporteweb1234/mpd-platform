@@ -61,19 +61,19 @@ export default async function AdminUserDetailPage({
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-mpd-gray mb-1">Rakeback Total</p>
-            <p className="text-xl font-bold font-mono text-mpd-gold">{formatCurrency(user.totalRakeback)}</p>
+            <p className="text-xl font-bold font-mono text-mpd-gold">{formatCurrency(user.totalRakeback.toNumber())}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-mpd-gray mb-1">Saldo Disponible</p>
-            <p className="text-xl font-bold font-mono text-mpd-green">{formatCurrency(user.availableBalance)}</p>
+            <p className="text-xl font-bold font-mono text-mpd-green">{formatCurrency(user.availableBalance.toNumber())}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-mpd-gray mb-1">Saldo Pendiente</p>
-            <p className="text-xl font-bold font-mono text-mpd-amber">{formatCurrency(user.pendingBalance)}</p>
+            <p className="text-xl font-bold font-mono text-mpd-amber">{formatCurrency(user.pendingBalance.toNumber())}</p>
           </CardContent>
         </Card>
         <Card>

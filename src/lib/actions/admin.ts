@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
+import { Prisma } from "@prisma/client";
 
 export async function loadRakeback(data: {
   userId: string;
@@ -27,6 +28,8 @@ export async function loadRakeback(data: {
 
   if (!user) return { error: "Usuario no encontrado" };
 
+  const balanceAfter = user.availableBalance.plus(rakebackAmount);
+
   await prisma.$transaction([
     prisma.rakebackRecord.create({
       data: {
@@ -49,8 +52,8 @@ export async function loadRakeback(data: {
         userId: data.userId,
         type: "RAKEBACK_CREDIT",
         amount: rakebackAmount,
-        balanceBefore: user.availableBalance,
-        balanceAfter: user.availableBalance + rakebackAmount,
+        balanceBefore: user.availableBalance.toNumber(),
+        balanceAfter: balanceAfter.toNumber(),
         description: `Rakeback ${data.period} - ${data.rakebackPercent}% de €${data.rakeGenerated.toFixed(2)}`,
         referenceType: "RAKEBACK",
         createdBy: session.user.id,
@@ -87,18 +90,19 @@ export async function updateUserBalances(data: {
   });
   if (!user) return { error: "Usuario no encontrado" };
 
-  const delta = data.availableBalance - user.availableBalance;
+  const newBalance = new Prisma.Decimal(data.availableBalance);
+  const delta = newBalance.minus(user.availableBalance);
 
   await prisma.$transaction([
-    ...(delta !== 0
+    ...(!delta.isZero()
       ? [
           prisma.balanceTransaction.create({
             data: {
               userId: data.userId,
               type: "MANUAL_ADJUSTMENT",
-              amount: delta,
-              balanceBefore: user.availableBalance,
-              balanceAfter: data.availableBalance,
+              amount: delta.toNumber(),
+              balanceBefore: user.availableBalance.toNumber(),
+              balanceAfter: newBalance.toNumber(),
               description: "Ajuste manual de saldo por admin",
               createdBy: session.user.id,
             },
@@ -135,7 +139,9 @@ export async function adjustBalance(data: {
   });
 
   if (!user) return { error: "Usuario no encontrado" };
-  if (user.availableBalance + data.amount < 0) {
+
+  const balanceAfter = user.availableBalance.plus(data.amount);
+  if (balanceAfter.lessThan(0)) {
     return { error: "El saldo no puede quedar negativo" };
   }
 
@@ -145,8 +151,8 @@ export async function adjustBalance(data: {
         userId: data.userId,
         type: "MANUAL_ADJUSTMENT",
         amount: data.amount,
-        balanceBefore: user.availableBalance,
-        balanceAfter: user.availableBalance + data.amount,
+        balanceBefore: user.availableBalance.toNumber(),
+        balanceAfter: balanceAfter.toNumber(),
         description: data.description,
         createdBy: session.user.id,
       },
