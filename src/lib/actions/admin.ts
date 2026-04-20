@@ -69,6 +69,56 @@ export async function loadRakeback(data: {
   return { success: true };
 }
 
+export async function updateUserBalances(data: {
+  userId: string;
+  availableBalance: number;
+  pendingBalance: number;
+  totalRakeback: number;
+  investedBalance: number;
+}) {
+  const session = await auth();
+  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
+    return { error: "No autorizado" };
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: data.userId },
+    select: { availableBalance: true },
+  });
+  if (!user) return { error: "Usuario no encontrado" };
+
+  const delta = data.availableBalance - user.availableBalance;
+
+  await prisma.$transaction([
+    ...(delta !== 0
+      ? [
+          prisma.balanceTransaction.create({
+            data: {
+              userId: data.userId,
+              type: "MANUAL_ADJUSTMENT",
+              amount: delta,
+              balanceBefore: user.availableBalance,
+              balanceAfter: data.availableBalance,
+              description: "Ajuste manual de saldo por admin",
+              createdBy: session.user.id,
+            },
+          }),
+        ]
+      : []),
+    prisma.user.update({
+      where: { id: data.userId },
+      data: {
+        availableBalance: data.availableBalance,
+        pendingBalance: data.pendingBalance,
+        totalRakeback: data.totalRakeback,
+        investedBalance: data.investedBalance,
+      },
+    }),
+  ]);
+
+  return { success: true };
+}
+
 export async function adjustBalance(data: {
   userId: string;
   amount: number;

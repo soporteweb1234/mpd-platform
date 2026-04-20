@@ -42,7 +42,7 @@ export const NAVIGATION = {
     { label: "Cursos", href: "/admin/courses", icon: "GraduationCap" },
     { label: "Bancaje", href: "/admin/staking", icon: "Landmark" },
     { label: "Referidos", href: "/admin/referrals", icon: "GitBranch" },
-    { label: "Saldo", href: "/admin/balance", icon: "Wallet" },
+    { label: "Saldo", href: "/admin/saldos", icon: "Wallet" },
     { label: "Logros", href: "/admin/achievements", icon: "Trophy" },
     { label: "Knowledge Base", href: "/admin/knowledge", icon: "BookOpen" },
     { label: "Soporte", href: "/admin/support", icon: "LifeBuoy" },
