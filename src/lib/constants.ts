@@ -24,7 +24,7 @@ export const NAVIGATION = {
     { label: "Mis Salas", href: "/dashboard/rooms", icon: "Building2" },
     { label: "Referidos", href: "/dashboard/referrals", icon: "Users" },
     { label: "Servicios", href: "/dashboard/services", icon: "ShoppingBag" },
-    { label: "Cursos", href: "/dashboard/courses", icon: "GraduationCap" },
+    { label: "Cursos", href: "/dashboard/cursos", icon: "GraduationCap" },
     { label: "Logros", href: "/dashboard/achievements", icon: "Trophy" },
     { label: "Comunidad", href: "/dashboard/community", icon: "MessagesSquare" },
     { label: "MPD Staking", href: "/dashboard/staking", icon: "Landmark" },
