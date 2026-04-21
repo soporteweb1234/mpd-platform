@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { toNum } from "@/lib/money";
 import { Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import Link from "next/link";
@@ -51,20 +52,20 @@ export default async function BalancePage() {
         <Card className="border-mpd-green/30">
           <CardContent className="p-5">
             <p className="text-xs text-mpd-gray uppercase tracking-wider mb-1">Saldo Disponible</p>
-            <p className="text-3xl font-bold font-mono text-mpd-green">{formatCurrency(user?.availableBalance ?? 0)}</p>
+            <p className="text-3xl font-bold font-mono text-mpd-green">{formatCurrency(toNum(user?.availableBalance))}</p>
           </CardContent>
         </Card>
         <Card className="border-mpd-amber/30">
           <CardContent className="p-5">
             <p className="text-xs text-mpd-gray uppercase tracking-wider mb-1">Saldo Pendiente</p>
-            <p className="text-3xl font-bold font-mono text-mpd-amber">{formatCurrency(user?.pendingBalance ?? 0)}</p>
+            <p className="text-3xl font-bold font-mono text-mpd-amber">{formatCurrency(toNum(user?.pendingBalance))}</p>
             <p className="text-[10px] text-mpd-gray-dark mt-1">Se liquida en la próxima quincena</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-mpd-gray uppercase tracking-wider mb-1">Total Histórico</p>
-            <p className="text-3xl font-bold font-mono text-mpd-white">{formatCurrency(user?.lifetimeEarnings ?? 0)}</p>
+            <p className="text-3xl font-bold font-mono text-mpd-white">{formatCurrency(toNum(user?.lifetimeEarnings))}</p>
           </CardContent>
         </Card>
       </div>

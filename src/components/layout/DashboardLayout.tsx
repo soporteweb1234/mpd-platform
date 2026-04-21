@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { NAVIGATION } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
+import { toNum } from "@/lib/money";
 
 export async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -30,7 +31,7 @@ export async function DashboardLayout({ children }: { children: React.ReactNode 
           avatar: user.avatar,
           stratum: user.stratum,
           role: user.role,
-          availableBalance: user.availableBalance,
+          availableBalance: toNum(user.availableBalance),
         }}
         type="dashboard"
       />

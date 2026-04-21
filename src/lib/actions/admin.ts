@@ -3,6 +3,7 @@
 import { prisma } from "@/lib/prisma";
 import { checkAdmin } from "@/lib/auth/guards";
 import { rateLimit, RateLimits } from "@/lib/security/ratelimit";
+import { toNum, addMoney, isNegative } from "@/lib/money";
 
 export async function loadRakeback(data: {
   userId: string;
@@ -52,8 +53,8 @@ export async function loadRakeback(data: {
         userId: data.userId,
         type: "RAKEBACK_CREDIT",
         amount: rakebackAmount,
-        balanceBefore: user.availableBalance,
-        balanceAfter: user.availableBalance + rakebackAmount,
+        balanceBefore: toNum(user.availableBalance),
+        balanceAfter: toNum(addMoney(user.availableBalance, rakebackAmount)),
         description: `Rakeback ${data.period} - ${data.rakebackPercent}% de €${data.rakeGenerated.toFixed(2)}`,
         referenceType: "RAKEBACK",
         createdBy: session.user.id,
@@ -112,7 +113,14 @@ export async function updateUserBalances(data: {
   });
   if (!before) return { error: "Usuario no encontrado" };
 
-  const delta = data.availableBalance - before.availableBalance;
+  const delta = data.availableBalance - toNum(before.availableBalance);
+
+  const beforeNum = {
+    availableBalance: toNum(before.availableBalance),
+    pendingBalance: toNum(before.pendingBalance),
+    totalRakeback: toNum(before.totalRakeback),
+    investedBalance: toNum(before.investedBalance),
+  };
 
   await prisma.$transaction([
     ...(delta !== 0
@@ -122,7 +130,7 @@ export async function updateUserBalances(data: {
               userId: data.userId,
               type: "MANUAL_ADJUSTMENT",
               amount: delta,
-              balanceBefore: before.availableBalance,
+              balanceBefore: beforeNum.availableBalance,
               balanceAfter: data.availableBalance,
               description: "Ajuste manual de saldo por admin",
               createdBy: session.user.id,
@@ -146,7 +154,7 @@ export async function updateUserBalances(data: {
         entityType: "user",
         entityId: data.userId,
         details: {
-          before,
+          before: beforeNum,
           after: {
             availableBalance: data.availableBalance,
             pendingBalance: data.pendingBalance,
@@ -179,9 +187,12 @@ export async function adjustBalance(data: {
   });
 
   if (!user) return { error: "Usuario no encontrado" };
-  if (user.availableBalance + data.amount < 0) {
+  const projected = addMoney(user.availableBalance, data.amount);
+  if (isNegative(projected)) {
     return { error: "El saldo no puede quedar negativo" };
   }
+  const balanceBefore = toNum(user.availableBalance);
+  const balanceAfter = toNum(projected);
 
   await prisma.$transaction([
     prisma.balanceTransaction.create({
@@ -189,8 +200,8 @@ export async function adjustBalance(data: {
         userId: data.userId,
         type: "MANUAL_ADJUSTMENT",
         amount: data.amount,
-        balanceBefore: user.availableBalance,
-        balanceAfter: user.availableBalance + data.amount,
+        balanceBefore,
+        balanceAfter,
         description: data.description,
         createdBy: session.user.id,
       },
@@ -210,8 +221,8 @@ export async function adjustBalance(data: {
         entityId: data.userId,
         details: {
           delta: data.amount,
-          balanceBefore: user.availableBalance,
-          balanceAfter: user.availableBalance + data.amount,
+          balanceBefore,
+          balanceAfter,
           reason: data.description,
         },
       },

@@ -152,12 +152,12 @@ model User {
   secondaryRooms     String[]
   goals              String[]
 
-  // Financials
-  totalRakeback      Float           @default(0)
-  availableBalance   Float           @default(0)
-  pendingBalance     Float           @default(0)
-  investedBalance    Float           @default(0)
-  lifetimeEarnings   Float           @default(0)
+  // Financials — Decimal for money precision (never Float for balances)
+  totalRakeback      Decimal         @default(0) @db.Decimal(14, 2)
+  availableBalance   Decimal         @default(0) @db.Decimal(14, 2)
+  pendingBalance     Decimal         @default(0) @db.Decimal(14, 2)
+  investedBalance    Decimal         @default(0) @db.Decimal(14, 2)
+  lifetimeEarnings   Decimal         @default(0) @db.Decimal(14, 2)
 
   // Two-factor auth (TOTP)
   twoFactorEnabled   Boolean         @default(false)
@@ -286,6 +286,7 @@ model RakebackRecord {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
+  @@unique([userId, roomId, period])
   @@index([userId])
   @@index([roomId])
   @@index([period])

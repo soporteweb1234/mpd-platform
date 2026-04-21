@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { BadgeStratum } from "@/components/shared/BadgeStratum";
 import { BadgeStatus } from "@/components/shared/BadgeStatus";
 import { formatCurrency, formatDate, getRoleLabel } from "@/lib/utils";
+import { toNum } from "@/lib/money";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { getInitials } from "@/lib/utils";
 import Link from "next/link";
@@ -93,8 +94,8 @@ export default async function AdminUsersPage({
                     </td>
                     <td className="py-3 px-4 text-center"><BadgeStratum stratum={u.stratum} /></td>
                     <td className="py-3 px-4 text-center"><BadgeStatus status={u.status} /></td>
-                    <td className="py-3 px-4 text-right font-mono text-mpd-green">{formatCurrency(u.totalRakeback)}</td>
-                    <td className="py-3 px-4 text-right font-mono text-mpd-white">{formatCurrency(u.availableBalance)}</td>
+                    <td className="py-3 px-4 text-right font-mono text-mpd-green">{formatCurrency(toNum(u.totalRakeback))}</td>
+                    <td className="py-3 px-4 text-right font-mono text-mpd-white">{formatCurrency(toNum(u.availableBalance))}</td>
                     <td className="py-3 px-4 text-right text-mpd-gray">{formatDate(u.createdAt)}</td>
                     <td className="py-3 px-4 text-center">
                       <Button variant="ghost" size="sm" asChild>
