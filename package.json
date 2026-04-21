@@ -10,7 +10,7 @@
     "lint": "eslint",
     "db:push": "prisma db push",
     "db:generate": "prisma generate",
-    "db:seed": "npx tsx prisma/seed.mjs",
+    "db:seed": "npx tsx prisma/seed.ts",
     "db:studio": "prisma studio",
     "discord-bot": "npx tsx src/lib/discord/start.ts"
   },

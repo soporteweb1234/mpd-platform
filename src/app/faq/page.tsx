@@ -8,11 +8,23 @@ export const metadata = {
   description: "Resolvemos tus dudas sobre rakeback, salas de poker, VPN y servicios de Manager Poker Deal.",
 };
 
+// Evita prerender en build: la query a la DB ocurriría antes de tener
+// DATABASE_URL/DB viva en el entorno de Vercel, rompiendo el build.
+// Con force-dynamic, la página se renderiza por request, nunca en build.
+export const dynamic = "force-dynamic";
+
 export default async function FAQPage() {
-  const articles = await prisma.knowledgeArticle.findMany({
-    where: { isPublic: true, category: "FAQ" },
-    orderBy: { sortOrder: "asc" },
-  });
+  // Fallback seguro: si la DB no responde (infra caída, env mal), la página
+  // se sirve vacía en vez de tirar el server con 500.
+  let articles: Awaited<ReturnType<typeof prisma.knowledgeArticle.findMany>> = [];
+  try {
+    articles = await prisma.knowledgeArticle.findMany({
+      where: { isPublic: true, category: "FAQ" },
+      orderBy: { sortOrder: "asc" },
+    });
+  } catch (err) {
+    console.error("[/faq] DB unavailable, rendering empty:", err);
+  }
 
   return (
     <div className="min-h-screen bg-mpd-black">
