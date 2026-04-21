@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/lib/auth";
+import { AuthError } from "next-auth";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import bcrypt from "bcryptjs";
 import { registerSchema, changePasswordSchema } from "@/lib/validations";
 import { redirect } from "next/navigation";
@@ -65,10 +67,20 @@ export async function loginUser(formData: FormData) {
       redirectTo: "/dashboard",
     });
   } catch (error: unknown) {
-    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
-      throw error;
+    // Next.js throws a special redirect error after successful signIn — re-throw so the redirect happens.
+    if (isRedirectError(error)) throw error;
+
+    // NextAuth wraps bad credentials as CredentialsSignin. Everything else is infra.
+    if (error instanceof AuthError) {
+      if (error.type === "CredentialsSignin") {
+        return { error: "Email o contraseña incorrectos" };
+      }
+      console.error("[loginUser] AuthError:", error.type, error.message);
+      return { error: "Error de autenticación. Intenta de nuevo." };
     }
-    return { error: "Email o contraseña incorrectos" };
+
+    console.error("[loginUser] Unexpected error:", error);
+    return { error: "Error del servidor. Contacta soporte si persiste." };
   }
 }
 
