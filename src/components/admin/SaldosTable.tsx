@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatCurrency, getInitials } from "@/lib/utils";
 import { updateUserBalances } from "@/lib/actions/admin";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 import { Pencil, X, Check, Loader2 } from "lucide-react";
 
 interface UserBalance {
@@ -39,6 +40,7 @@ export function SaldosTable({ users }: { users: UserBalance[] }) {
   });
   const [error, setError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [confirmFor, setConfirmFor] = useState<UserBalance | null>(null);
 
   function openEdit(user: UserBalance) {
     setEditingId(user.id);
@@ -56,7 +58,7 @@ export function SaldosTable({ users }: { users: UserBalance[] }) {
     setError(null);
   }
 
-  function handleSave(userId: string) {
+  function requestSave(user: UserBalance) {
     const available = parseFloat(editValues.availableBalance);
     const pending = parseFloat(editValues.pendingBalance);
     const total = parseFloat(editValues.totalRakeback);
@@ -71,6 +73,18 @@ export function SaldosTable({ users }: { users: UserBalance[] }) {
       return;
     }
 
+    setError(null);
+    setConfirmFor(user);
+  }
+
+  function commitSave() {
+    if (!confirmFor) return;
+    const userId = confirmFor.id;
+    const available = parseFloat(editValues.availableBalance);
+    const pending = parseFloat(editValues.pendingBalance);
+    const total = parseFloat(editValues.totalRakeback);
+    const invested = parseFloat(editValues.investedBalance);
+
     startTransition(async () => {
       const result = await updateUserBalances({
         userId,
@@ -83,6 +97,7 @@ export function SaldosTable({ users }: { users: UserBalance[] }) {
         setError(result.error);
       } else {
         setEditingId(null);
+        setConfirmFor(null);
         router.refresh();
       }
     });
@@ -143,7 +158,7 @@ export function SaldosTable({ users }: { users: UserBalance[] }) {
                             <Button
                               size="sm"
                               variant="ghost"
-                              onClick={() => handleSave(user.id)}
+                              onClick={() => requestSave(user)}
                               disabled={isPending}
                               className="h-8 w-8 p-0 text-mpd-green hover:text-mpd-green"
                             >
@@ -203,6 +218,45 @@ export function SaldosTable({ users }: { users: UserBalance[] }) {
           </div>
         )}
       </CardContent>
+
+      <ConfirmDialog
+        open={confirmFor !== null}
+        onOpenChange={(o) => !o && setConfirmFor(null)}
+        title="Confirmar cambio de saldo"
+        danger
+        loading={isPending}
+        description={
+          confirmFor ? (
+            <div className="space-y-2">
+              <p>
+                Vas a sobreescribir los saldos de{" "}
+                <span className="text-mpd-white font-medium">{confirmFor.name}</span>.
+                Esta acción queda registrada en el log de actividad.
+              </p>
+              <ul className="text-xs font-mono text-mpd-white/80 bg-mpd-black/40 rounded p-2 space-y-0.5">
+                <li>
+                  Disponible: {formatCurrency(confirmFor.availableBalance)} →{" "}
+                  {formatCurrency(parseFloat(editValues.availableBalance) || 0)}
+                </li>
+                <li>
+                  Pendiente: {formatCurrency(confirmFor.pendingBalance)} →{" "}
+                  {formatCurrency(parseFloat(editValues.pendingBalance) || 0)}
+                </li>
+                <li>
+                  Ganado total: {formatCurrency(confirmFor.totalRakeback)} →{" "}
+                  {formatCurrency(parseFloat(editValues.totalRakeback) || 0)}
+                </li>
+                <li>
+                  Invertido: {formatCurrency(confirmFor.investedBalance)} →{" "}
+                  {formatCurrency(parseFloat(editValues.investedBalance) || 0)}
+                </li>
+              </ul>
+            </div>
+          ) : null
+        }
+        confirmLabel="Sí, actualizar"
+        onConfirm={commitSave}
+      />
     </Card>
   );
 }
