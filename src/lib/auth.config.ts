@@ -52,6 +52,7 @@ export const authConfig = {
         pathname === "/como-funciona" ||
         pathname === "/servicios" ||
         pathname === "/faq" ||
+        pathname === "/contacto" ||
         pathname.startsWith("/legal") ||
         pathname.startsWith("/ref/") ||
         pathname.startsWith("/api/auth") ||
