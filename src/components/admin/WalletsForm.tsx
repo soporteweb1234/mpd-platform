@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { updateWalletSettings, type WalletSettings } from "@/lib/actions/wallets";
+import { updateWalletSettings } from "@/lib/actions/wallets";
+import type { WalletSettings } from "@/lib/wallets/constants";
 
 const NETWORKS: Array<{ key: keyof WalletSettings; label: string; help: string }> = [
   {

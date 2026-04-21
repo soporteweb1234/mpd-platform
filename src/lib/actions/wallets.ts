@@ -3,16 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { checkAdmin } from "@/lib/auth/guards";
-
-export const WALLET_KEYS = [
-  "wallet.usdt.erc20",
-  "wallet.usdt.trc20",
-  "wallet.usdt.bep20",
-] as const;
-
-export type WalletKey = (typeof WALLET_KEYS)[number];
-
-export type WalletSettings = Record<WalletKey, string>;
+import { WALLET_KEYS, type WalletKey, type WalletSettings } from "@/lib/wallets/constants";
 
 export async function getWalletSettings(): Promise<WalletSettings> {
   const rows = await prisma.systemSetting.findMany({

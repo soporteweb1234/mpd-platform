@@ -45,7 +45,7 @@ export async function purchaseService(userId: string, serviceId: string) {
           serviceId: service.id,
           amount: price,
           paidWithBalance: true,
-          status: "PAID",
+          status: "CONFIRMED",
         },
         select: { id: true },
       });
