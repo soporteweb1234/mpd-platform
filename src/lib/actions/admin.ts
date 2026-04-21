@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { checkAdmin } from "@/lib/auth/guards";
 import { creditBalance, debitBalance } from "@/lib/wallet";
+import { rateLimit, RateLimits } from "@/lib/security/ratelimit";
 import {
   rakebackLoadSchema,
   balanceAdjustSchema,
@@ -15,6 +16,9 @@ export async function loadRakeback(input: RakebackLoadInput) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
   const { session } = authz;
+
+  const rl = await rateLimit(RateLimits.adminMoney, session.user.id);
+  if (!rl.success) return { error: "Rate limit: espera unos segundos" };
 
   const parsed = rakebackLoadSchema.safeParse(input);
   if (!parsed.success) {
@@ -65,6 +69,22 @@ export async function loadRakeback(input: RakebackLoadInput) {
         lifetimeEarnings: { increment: rakebackAmount },
       },
     });
+
+    await tx.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "RAKEBACK_LOADED",
+        entityType: "user",
+        entityId: data.userId,
+        details: {
+          amount: rakebackAmount,
+          rakeGenerated: data.rakeGenerated,
+          rakebackPercent: data.rakebackPercent,
+          period: data.period,
+          roomId: data.roomId,
+        },
+      },
+    });
   });
 
   return { success: true };
@@ -80,6 +100,9 @@ export async function updateUserBalances(data: {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
   const { session } = authz;
+
+  const rl = await rateLimit(RateLimits.adminMoney, session.user.id);
+  if (!rl.success) return { error: "Rate limit: espera unos segundos" };
 
   const user = await prisma.user.findUnique({
     where: { id: data.userId },
@@ -139,6 +162,29 @@ export async function updateUserBalances(data: {
           data: nonLedgered,
         });
       }
+
+      await tx.activityLog.create({
+        data: {
+          userId: session.user.id,
+          action: "USER_BALANCES_UPDATED",
+          entityType: "user",
+          entityId: data.userId,
+          details: {
+            before: {
+              availableBalance: user.availableBalance.toString(),
+              pendingBalance: user.pendingBalance.toString(),
+              totalRakeback: user.totalRakeback.toString(),
+              investedBalance: user.investedBalance.toString(),
+            },
+            after: {
+              availableBalance: data.availableBalance,
+              pendingBalance: data.pendingBalance,
+              totalRakeback: data.totalRakeback,
+              investedBalance: data.investedBalance,
+            },
+          },
+        },
+      });
     });
   } catch (err) {
     if (err instanceof Error && err.message === "Saldo insuficiente") {
@@ -155,17 +201,20 @@ export async function adjustBalance(input: BalanceAdjustInput) {
   if ("error" in authz) return authz;
   const { session } = authz;
 
+  const rl = await rateLimit(RateLimits.adminMoney, session.user.id);
+  if (!rl.success) return { error: "Rate limit: espera unos segundos" };
+
   const parsed = balanceAdjustSchema.safeParse(input);
   if (!parsed.success) {
     return { error: parsed.error.issues[0].message };
   }
   const data = parsed.data;
 
-  const userExists = await prisma.user.findUnique({
+  const userBefore = await prisma.user.findUnique({
     where: { id: data.userId },
-    select: { id: true },
+    select: { id: true, availableBalance: true },
   });
-  if (!userExists) return { error: "Usuario no encontrado" };
+  if (!userBefore) return { error: "Usuario no encontrado" };
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -192,6 +241,20 @@ export async function adjustBalance(input: BalanceAdjustInput) {
           session.user.id,
         );
       }
+
+      await tx.activityLog.create({
+        data: {
+          userId: session.user.id,
+          action: "BALANCE_ADJUSTED",
+          entityType: "user",
+          entityId: data.userId,
+          details: {
+            delta: data.amount,
+            balanceBefore: userBefore.availableBalance.toString(),
+            reason: data.description,
+          },
+        },
+      });
     });
   } catch (err) {
     if (err instanceof Error && err.message === "Saldo insuficiente") {
