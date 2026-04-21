@@ -67,7 +67,8 @@ export const authConfig = {
       }
 
       // Admin routes — require ADMIN or SUPER_ADMIN role
-      const role = (auth?.user as Record<string, unknown>)?.role;
+      const u = auth?.user as Record<string, unknown> | undefined;
+      const role = u?.role;
       const isAdminPath =
         pathname.startsWith("/admin") ||
         pathname.startsWith("/api/admin") ||
@@ -77,6 +78,20 @@ export const authConfig = {
           return Response.json({ error: "Forbidden" }, { status: 403 });
         }
         return Response.redirect(new URL("/dashboard", request.nextUrl));
+      }
+
+      // 2FA gate para admins marcados como required.
+      const twoFactorRequired = Boolean(u?.twoFactorRequired);
+      const twoFactorEnabled = Boolean(u?.twoFactorEnabled);
+      if (isAdminPath && twoFactorRequired && !twoFactorEnabled) {
+        const isSetup = pathname.startsWith("/admin/2fa/setup");
+        const isEnroll = pathname.startsWith("/api/admin/2fa/");
+        if (!isSetup && !isEnroll) {
+          if (isApi) {
+            return Response.json({ error: "TwoFactorRequired" }, { status: 403 });
+          }
+          return Response.redirect(new URL("/admin/2fa/setup", request.nextUrl));
+        }
       }
 
       return true;

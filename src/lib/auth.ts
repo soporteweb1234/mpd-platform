@@ -25,6 +25,8 @@ declare module "next-auth" {
       discordId: string | null;
       discordConnected: boolean;
       onboardingStep: number;
+      twoFactorRequired: boolean;
+      twoFactorEnabled: boolean;
     };
   }
 
@@ -35,6 +37,8 @@ declare module "next-auth" {
     discordId: string | null;
     discordConnected: boolean;
     onboardingStep: number;
+    twoFactorRequired: boolean;
+    twoFactorEnabled: boolean;
   }
 }
 
@@ -47,6 +51,8 @@ declare module "next-auth" {
     discordId: string | null;
     discordConnected: boolean;
     onboardingStep: number;
+    twoFactorRequired: boolean;
+    twoFactorEnabled: boolean;
   }
 }
 
@@ -89,6 +95,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           discordId: user.discordId,
           discordConnected: user.discordConnected,
           onboardingStep: user.onboardingStep,
+          twoFactorRequired: user.twoFactorRequired,
+          twoFactorEnabled: user.twoFactorEnabled,
         };
       },
     }),
@@ -99,7 +107,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async jwt({ token, user, account }) {
+    async jwt({ token, user, account, trigger }) {
       if (user) {
         token.id = user.id as string;
         token.role = user.role;
@@ -108,6 +116,20 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.discordId = user.discordId;
         token.discordConnected = user.discordConnected;
         token.onboardingStep = user.onboardingStep;
+        token.twoFactorRequired = user.twoFactorRequired;
+        token.twoFactorEnabled = user.twoFactorEnabled;
+      }
+
+      // On session refresh (triggered tras completar 2FA), refrescar los flags.
+      if (trigger === "update" && token.id) {
+        const fresh = await prisma.user.findUnique({
+          where: { id: token.id as string },
+          select: { twoFactorRequired: true, twoFactorEnabled: true },
+        });
+        if (fresh) {
+          token.twoFactorRequired = fresh.twoFactorRequired;
+          token.twoFactorEnabled = fresh.twoFactorEnabled;
+        }
       }
 
       // Handle Discord OAuth sign-in
@@ -160,6 +182,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         token.discordId = dbUser.discordId;
         token.discordConnected = dbUser.discordConnected;
         token.onboardingStep = dbUser.onboardingStep;
+        token.twoFactorRequired = dbUser.twoFactorRequired;
+        token.twoFactorEnabled = dbUser.twoFactorEnabled;
       }
 
       return token;
@@ -172,6 +196,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       session.user.discordId = token.discordId as string | null;
       session.user.discordConnected = token.discordConnected as boolean;
       session.user.onboardingStep = token.onboardingStep as number;
+      session.user.twoFactorRequired = Boolean(token.twoFactorRequired);
+      session.user.twoFactorEnabled = Boolean(token.twoFactorEnabled);
       return session;
     },
   },
