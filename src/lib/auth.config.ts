@@ -53,7 +53,8 @@ export const authConfig = {
         pathname.startsWith("/ref/") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/chat") ||
-        pathname.startsWith("/api/discord")
+        pathname.startsWith("/api/discord") ||
+        pathname.startsWith("/api/health")
       ) {
         return true;
       }

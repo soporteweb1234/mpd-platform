@@ -73,36 +73,65 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        const parsed = loginSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        // NextAuth v5 Credentials provider swallows any throw inside authorize()
+        // y lo normaliza a CredentialsSignin. Sin este try/catch + log, un DB
+        // caído o un schema desincronizado (p.ej. columna investedBalance
+        // ausente en prod tras c6b7a05) se ve como "Email o contraseña
+        // incorrectos" y es indistinguible de un password malo.
+        try {
+          const parsed = loginSchema.safeParse(credentials);
+          if (!parsed.success) {
+            console.warn("[authorize] invalid credentials format:", parsed.error.issues);
+            return null;
+          }
 
-        const user = await prisma.user.findUnique({
-          where: { email: parsed.data.email },
-        });
+          const user = await prisma.user.findUnique({
+            where: { email: parsed.data.email },
+          });
 
-        if (!user || user.deletedAt) return null;
-        if (user.status === "BANNED") return null;
+          if (!user) {
+            console.warn("[authorize] user not found:", parsed.data.email);
+            return null;
+          }
+          if (user.deletedAt) {
+            console.warn("[authorize] user soft-deleted:", user.id);
+            return null;
+          }
+          if (user.status === "BANNED") {
+            console.warn("[authorize] user banned:", user.id);
+            return null;
+          }
 
-        const isValid = await bcrypt.compare(parsed.data.password, user.password);
-        if (!isValid) return null;
+          const isValid = await bcrypt.compare(parsed.data.password, user.password);
+          if (!isValid) {
+            console.warn("[authorize] bad password for:", user.id);
+            return null;
+          }
 
-        await prisma.user.update({
-          where: { id: user.id },
-          data: { lastLoginAt: new Date(), lastActiveAt: new Date() },
-        });
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { lastLoginAt: new Date(), lastActiveAt: new Date() },
+          });
 
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.avatar,
-          role: user.role,
-          stratum: user.stratum,
-          nickname: user.nickname,
-          discordId: user.discordId,
-          discordConnected: user.discordConnected,
-          onboardingStep: user.onboardingStep,
-        };
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.avatar,
+            role: user.role,
+            stratum: user.stratum,
+            nickname: user.nickname,
+            discordId: user.discordId,
+            discordConnected: user.discordConnected,
+            onboardingStep: user.onboardingStep,
+          };
+        } catch (err) {
+          const name = err instanceof Error ? err.name : "UnknownError";
+          const message = err instanceof Error ? err.message : String(err);
+          console.error("[authorize] INFRA error (not bad creds):", name, message);
+          if (err instanceof Error && err.stack) console.error(err.stack);
+          return null;
+        }
       },
     }),
     ...discordProvider,
