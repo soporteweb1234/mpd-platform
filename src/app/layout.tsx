@@ -1,16 +1,23 @@
 import type { Metadata } from "next";
-import { Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { DM_Sans, Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
 import { Providers } from "@/components/providers";
 import "./globals.css";
 
-const plusJakarta = Plus_Jakarta_Sans({
-  variable: "--font-body",
+const dmSans = DM_Sans({
+  variable: "--font-body-var",
   subsets: ["latin"],
   display: "swap",
 });
 
+const cormorant = Cormorant_Garamond({
+  variable: "--font-display-var",
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+});
+
 const jetbrainsMono = JetBrains_Mono({
-  variable: "--font-mono",
+  variable: "--font-mono-var",
   subsets: ["latin"],
   display: "swap",
 });
@@ -59,7 +66,7 @@ export default function RootLayout({
   return (
     <html
       lang="es"
-      className={`${plusJakarta.variable} ${jetbrainsMono.variable} h-full dark`}
+      className={`${dmSans.variable} ${cormorant.variable} ${jetbrainsMono.variable} h-full dark`}
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">

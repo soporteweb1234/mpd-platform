@@ -14,9 +14,13 @@ export default function CalculadoraPage() {
       <main className="pt-24 pb-16">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-10">
-            <h1 className="text-3xl font-bold text-mpd-white">Calculadora de Rakeback</h1>
-            <p className="mt-2 text-mpd-gray">Descubre cuánto podrías ganar con Manager Poker Deal</p>
-            <div className="mt-3 h-0.5 w-12 bg-mpd-gold rounded-full mx-auto" />
+            <h1 className="font-display text-4xl sm:text-5xl font-semibold text-mpd-white">
+              Calculadora de bonificaciones
+            </h1>
+            <p className="mt-3 text-mpd-gray">
+              Descubre cuánto rakeback en USD puedes acumular con Manager Poker Deals.
+            </p>
+            <div className="mt-4 h-0.5 w-12 bg-mpd-gold rounded-full mx-auto" />
           </div>
           <RakebackCalculator />
         </div>

@@ -22,14 +22,14 @@ export default function LandingPage() {
             <Badge variant="outline" className="mb-6 text-mpd-gold border-mpd-gold/30">
               Ecosistema integral para jugadores de poker
             </Badge>
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-mpd-white leading-tight">
-              Tú juegas al poker.{" "}
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-mpd-gold to-mpd-gold-light">
+            <h1 className="font-display text-5xl sm:text-6xl lg:text-7xl font-semibold text-mpd-white leading-[1.05]">
+              Tú juegas al poker.
+              <span className="block mt-2 tagline-glow">
                 Nosotros resolvemos todo lo demás.
               </span>
             </h1>
             <p className="mt-6 text-lg text-mpd-gray max-w-2xl">
-              Manager Poker Deal es tu plataforma integral: rakeback optimizado, herramientas profesionales,
+              Manager Poker Deals es tu plataforma integral: rakeback optimizado, herramientas profesionales,
               coaching, comunidad y gestión de bankroll. Todo en un solo lugar.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row gap-4">

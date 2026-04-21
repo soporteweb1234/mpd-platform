@@ -1,6 +1,42 @@
-export const APP_NAME = "Manager Poker Deal";
+export const APP_NAME = "Manager Poker Deals";
 export const APP_DESCRIPTION =
-  "El jugador solo tiene que jugar al poker. Manager Poker Deal resuelve todo lo demás.";
+  "El jugador solo tiene que jugar al poker. Manager Poker Deals resuelve todo lo demás.";
+
+export const CURRENCY = {
+  code: "USD" as const,
+  symbol: "$",
+  locale: "en-US" as const,
+};
+
+export const PALETTE = {
+  black: "#070707",
+  gold: "#F0B429",
+  white: "#EFEFEF",
+} as const;
+
+// Principales salas con servicio de agencia directo.
+export const MAIN_ROOMS = [
+  { slug: "pokerstars", name: "PokerStars", baseRakeback: 25, mpdRakeback: 30 },
+  { slug: "ggpoker", name: "GGPoker", baseRakeback: 30, mpdRakeback: 40 },
+  { slug: "888poker", name: "888poker", baseRakeback: 20, mpdRakeback: 27 },
+  { slug: "wpt-global", name: "WPT Global", baseRakeback: 35, mpdRakeback: 45 },
+  { slug: "ipoker", name: "iPoker Network", baseRakeback: 22, mpdRakeback: 28 },
+] as const;
+
+// Otras salas / club con servicio de agencia (perfil avanzado).
+export const OTHER_ROOMS = [
+  { slug: "clubgg", name: "ClubGG" },
+  { slug: "pppoker", name: "PPPoker" },
+  { slug: "pokerbros", name: "PokerBros" },
+  { slug: "suprema", name: "Suprema Poker" },
+  { slug: "x-poker", name: "X-Poker" },
+] as const;
+
+export const LEGAL_DISCLAIMER = [
+  "Manager Poker Deals (MPD) no organiza partidas de poker ni opera como operador de juego. Actúa como intermediador y agencia de servicios entre el jugador y las salas de poker legalmente licenciadas.",
+  "Las estimaciones de rakeback que mostramos son orientativas y dependen del volumen, nivel, promociones activas y condiciones particulares de cada sala.",
+  "El poker online implica riesgo económico. Juega con responsabilidad. Si crees que tu juego puede ser un problema, consulta jugarbien.es o el recurso oficial de tu país.",
+];
 
 export const STRATA = {
   NOVATO: { label: "Novato", level: "NL2 - NL10", color: "text-mpd-gray" },

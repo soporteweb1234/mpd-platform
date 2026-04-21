@@ -1,19 +1,19 @@
 @import "tailwindcss";
 
 :root {
-  --mpd-black: #0D1117;
-  --mpd-surface: #161B22;
-  --mpd-surface-hover: #1C2128;
-  --mpd-border: #30363D;
-  --mpd-border-light: #3D444D;
-  --mpd-gold: #C9A84C;
-  --mpd-gold-light: #D4B85A;
-  --mpd-gold-dark: #A88B3D;
+  --mpd-black: #070707;
+  --mpd-surface: #111111;
+  --mpd-surface-hover: #1A1A1A;
+  --mpd-border: #262626;
+  --mpd-border-light: #333333;
+  --mpd-gold: #F0B429;
+  --mpd-gold-light: #F7C85A;
+  --mpd-gold-dark: #C69718;
   --mpd-green: #00C875;
   --mpd-green-dark: #00A35E;
   --mpd-amber: #FF9500;
   --mpd-red: #F85149;
-  --mpd-white: #E6EDF3;
+  --mpd-white: #EFEFEF;
   --mpd-gray: #8B949E;
   --mpd-gray-dark: #656D76;
 
@@ -60,21 +60,25 @@
   --color-input: var(--input);
   --color-ring: var(--ring);
 
-  --color-mpd-black: #0D1117;
-  --color-mpd-surface: #161B22;
-  --color-mpd-surface-hover: #1C2128;
-  --color-mpd-border: #30363D;
-  --color-mpd-border-light: #3D444D;
-  --color-mpd-gold: #C9A84C;
-  --color-mpd-gold-light: #D4B85A;
-  --color-mpd-gold-dark: #A88B3D;
+  --color-mpd-black: #070707;
+  --color-mpd-surface: #111111;
+  --color-mpd-surface-hover: #1A1A1A;
+  --color-mpd-border: #262626;
+  --color-mpd-border-light: #333333;
+  --color-mpd-gold: #F0B429;
+  --color-mpd-gold-light: #F7C85A;
+  --color-mpd-gold-dark: #C69718;
   --color-mpd-green: #00C875;
   --color-mpd-green-dark: #00A35E;
   --color-mpd-amber: #FF9500;
   --color-mpd-red: #F85149;
-  --color-mpd-white: #E6EDF3;
+  --color-mpd-white: #EFEFEF;
   --color-mpd-gray: #8B949E;
   --color-mpd-gray-dark: #656D76;
+
+  --font-display: var(--font-display-var);
+  --font-body: var(--font-body-var);
+  --font-mono: var(--font-mono-var);
 
   --radius-lg: var(--radius);
   --radius-md: calc(var(--radius) - 2px);
@@ -114,7 +118,7 @@ body {
 
 /* Selection */
 ::selection {
-  background: rgba(201, 168, 76, 0.3);
+  background: rgba(240, 180, 41, 0.3);
   color: var(--mpd-white);
 }
 
@@ -163,9 +167,42 @@ body {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    rgba(201, 168, 76, 0.1) 50%,
+    rgba(240, 180, 41, 0.12) 50%,
     transparent 100%
   );
   background-size: 200% 100%;
   animation: shimmer 2s infinite;
+}
+
+/* Tagline glow sweep — letras brillando */
+@keyframes taglineGlow {
+  0% { background-position: -150% center; }
+  100% { background-position: 250% center; }
+}
+
+.tagline-glow {
+  background: linear-gradient(
+    90deg,
+    var(--mpd-white) 0%,
+    var(--mpd-white) 40%,
+    var(--mpd-gold) 50%,
+    var(--mpd-white) 60%,
+    var(--mpd-white) 100%
+  );
+  background-size: 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: taglineGlow 6s linear infinite;
+}
+
+/* Typography helpers */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+
+.font-body {
+  font-family: var(--font-body), system-ui, sans-serif;
 }

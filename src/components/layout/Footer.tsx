@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { Logo } from "@/components/shared/Logo";
+import { LEGAL_DISCLAIMER } from "@/lib/constants";
 
 export function Footer() {
   return (
@@ -6,11 +8,8 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div>
-            <div className="flex items-center gap-2 mb-4">
-              <div className="h-8 w-8 rounded-lg bg-mpd-gold flex items-center justify-center text-mpd-black font-bold text-sm">
-                M
-              </div>
-              <span className="font-semibold text-mpd-white">Manager Poker Deal</span>
+            <div className="mb-4">
+              <Logo size="sm" />
             </div>
             <p className="text-sm text-mpd-gray">
               El jugador solo tiene que jugar al poker. Nosotros resolvemos todo lo demás.
@@ -41,8 +40,15 @@ export function Footer() {
             </ul>
           </div>
         </div>
-        <div className="border-t border-mpd-border mt-8 pt-8 text-center">
-          <p className="text-sm text-mpd-gray-dark">&copy; Manager Poker Deal 2026. Todos los derechos reservados.</p>
+        <div className="border-t border-mpd-border mt-8 pt-8 space-y-4">
+          <div className="space-y-2 max-w-4xl mx-auto text-[11px] leading-relaxed text-mpd-gray-dark">
+            {LEGAL_DISCLAIMER.map((line, i) => (
+              <p key={i}>{line}</p>
+            ))}
+          </div>
+          <p className="text-sm text-mpd-gray-dark text-center">
+            &copy; Manager Poker Deals 2026. Todos los derechos reservados.
+          </p>
         </div>
       </div>
     </footer>
