@@ -25,7 +25,7 @@ export function CreateTicketForm({ userId }: { userId: string }) {
       message: fd.get("message") as string,
     });
 
-    if (result?.error) {
+    if (result && "error" in result) {
       toast.error(result.error);
     } else {
       toast.success("Ticket creado correctamente");

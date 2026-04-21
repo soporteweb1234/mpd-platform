@@ -1,14 +1,17 @@
-import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "./Sidebar";
 import { NAVIGATION } from "@/lib/constants";
+import { requireAdmin, AuthzError } from "@/lib/auth/guards";
 
 export async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  if (!session?.user) redirect("/login");
-
-  if (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN") {
-    redirect("/dashboard");
+  let session;
+  try {
+    session = await requireAdmin();
+  } catch (err) {
+    if (err instanceof AuthzError) {
+      redirect(err.status === 401 ? "/login" : "/dashboard");
+    }
+    throw err;
   }
 
   return (

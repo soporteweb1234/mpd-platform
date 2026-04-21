@@ -1,8 +1,8 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { auth } from "@/lib/auth";
 import { Prisma } from "@prisma/client";
+import { checkAdmin } from "@/lib/auth/guards";
 import { creditBalance, debitBalance } from "@/lib/wallet";
 import {
   rakebackLoadSchema,
@@ -12,10 +12,9 @@ import {
 } from "@/lib/validations";
 
 export async function loadRakeback(input: RakebackLoadInput) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   const parsed = rakebackLoadSchema.safeParse(input);
   if (!parsed.success) {
@@ -78,10 +77,9 @@ export async function updateUserBalances(data: {
   totalRakeback: number;
   investedBalance: number;
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   const user = await prisma.user.findUnique({
     where: { id: data.userId },
@@ -153,10 +151,9 @@ export async function updateUserBalances(data: {
 }
 
 export async function adjustBalance(input: BalanceAdjustInput) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   const parsed = balanceAdjustSchema.safeParse(input);
   if (!parsed.success) {
@@ -207,10 +204,9 @@ export async function adjustBalance(input: BalanceAdjustInput) {
 }
 
 export async function updateUserRole(userId: string, role: string) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.user.update({
     where: { id: userId },
@@ -221,10 +217,9 @@ export async function updateUserRole(userId: string, role: string) {
 }
 
 export async function updateUserStratum(userId: string, stratum: string) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.user.update({
     where: { id: userId },
@@ -235,10 +230,9 @@ export async function updateUserStratum(userId: string, stratum: string) {
 }
 
 export async function suspendUser(userId: string) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.user.update({
     where: { id: userId },
@@ -260,10 +254,9 @@ export async function createRoom(data: {
   vpnRequired?: boolean;
   vpnInstructions?: string | null;
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.pokerRoom.create({ data: data as any });
   return { success: true };
@@ -283,10 +276,9 @@ export async function createService(data: {
   features?: string[];
   setupInstructions?: string | null;
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.service.create({ data: data as any });
   return { success: true };
@@ -299,10 +291,9 @@ export async function sendNotification(data: {
   message: string;
   link?: string;
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.notification.create({ data });
   return { success: true };
@@ -315,10 +306,9 @@ export async function sendBulkNotification(data: {
   link?: string;
   filters?: { stratum?: string; role?: string };
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   const where: Record<string, unknown> = { deletedAt: null, status: "ACTIVE" };
   if (data.filters?.stratum) where.stratum = data.filters.stratum;
@@ -350,10 +340,9 @@ export async function createKnowledgeArticle(data: {
   isPublic: boolean;
   tags: string[];
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.knowledgeArticle.create({ data });
   return { success: true };
@@ -366,20 +355,18 @@ export async function updateKnowledgeArticle(id: string, data: {
   isPublic?: boolean;
   tags?: string[];
 }) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.knowledgeArticle.update({ where: { id }, data });
   return { success: true };
 }
 
 export async function fulfillOrder(orderId: string) {
-  const session = await auth();
-  if (!session?.user || (session.user.role !== "ADMIN" && session.user.role !== "SUPER_ADMIN")) {
-    return { error: "No autorizado" };
-  }
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
 
   await prisma.serviceOrder.update({
     where: { id: orderId },

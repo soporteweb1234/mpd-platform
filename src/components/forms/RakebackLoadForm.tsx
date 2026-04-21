@@ -39,7 +39,7 @@ export function RakebackLoadForm({ users, rooms }: Props) {
       notes: (fd.get("notes") as string) || undefined,
     });
 
-    if (result?.error) {
+    if (result && "error" in result) {
       toast.error(result.error);
     } else {
       toast.success("Rakeback cargado correctamente");
