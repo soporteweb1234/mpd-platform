@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import { DataCard } from "@/components/shared/DataCard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency, formatDate } from "@/lib/utils";
+import { toNum } from "@/lib/money";
 import { Users, TrendingUp, Wallet, LifeBuoy, UserPlus, Activity } from "lucide-react";
 import { BadgeStratum } from "@/components/shared/BadgeStratum";
 import { BadgeStatus } from "@/components/shared/BadgeStatus";
@@ -82,7 +83,7 @@ export default async function AdminDashboardPage() {
         />
         <DataCard
           title="Saldo Circulante"
-          value={totalBalance._sum.availableBalance?.toNumber() ?? 0}
+          value={toNum(totalBalance._sum.availableBalance)}
           format="currency"
           icon={<Wallet className="h-5 w-5" />}
           color="amber"

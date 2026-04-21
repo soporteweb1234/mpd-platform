@@ -152,12 +152,12 @@ model User {
   secondaryRooms     String[]
   goals              String[]
 
-  // Financials
+  // Financials — Decimal for money precision (never Float for balances)
   totalRakeback      Decimal         @default(0) @db.Decimal(14, 2)
   availableBalance   Decimal         @default(0) @db.Decimal(14, 2)
   pendingBalance     Decimal         @default(0) @db.Decimal(14, 2)
-  lifetimeEarnings   Decimal         @default(0) @db.Decimal(14, 2)
   investedBalance    Decimal         @default(0) @db.Decimal(14, 2)
+  lifetimeEarnings   Decimal         @default(0) @db.Decimal(14, 2)
 
   // Two-factor auth (TOTP)
   twoFactorEnabled   Boolean         @default(false)

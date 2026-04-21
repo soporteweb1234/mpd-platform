@@ -1,10 +1,11 @@
 import { prisma } from "@/lib/prisma";
 import { SaldosTable } from "@/components/admin/SaldosTable";
+import { toNum } from "@/lib/money";
 
 export const metadata = { title: "Saldos — Admin" };
 
 export default async function AdminSaldosPage() {
-  const rawUsers = await prisma.user.findMany({
+  const rows = await prisma.user.findMany({
     where: { deletedAt: null },
     orderBy: { name: "asc" },
     select: {
@@ -18,15 +19,12 @@ export default async function AdminSaldosPage() {
     },
   });
 
-  // Decimal → number en el límite RSC → Client (Prisma.Decimal no es serializable)
-  const users = rawUsers.map((u) => ({
-    id: u.id,
-    name: u.name,
-    email: u.email,
-    availableBalance: u.availableBalance.toNumber(),
-    pendingBalance: u.pendingBalance.toNumber(),
-    totalRakeback: u.totalRakeback.toNumber(),
-    investedBalance: u.investedBalance.toNumber(),
+  const users = rows.map((u) => ({
+    ...u,
+    availableBalance: toNum(u.availableBalance),
+    pendingBalance: toNum(u.pendingBalance),
+    totalRakeback: toNum(u.totalRakeback),
+    investedBalance: toNum(u.investedBalance),
   }));
 
   return (

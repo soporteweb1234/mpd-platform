@@ -7,6 +7,7 @@ import { BadgeStratum } from "@/components/shared/BadgeStratum";
 import { BadgeStatus } from "@/components/shared/BadgeStatus";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatCurrency, formatDate, getInitials, getRoleLabel, getStratumLabel } from "@/lib/utils";
+import { toNum } from "@/lib/money";
 import Link from "next/link";
 import { TrendingUp, Wallet, Users, Calendar, Mail, Globe, Gamepad2 } from "lucide-react";
 
@@ -61,19 +62,19 @@ export default async function AdminUserDetailPage({
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-mpd-gray mb-1">Rakeback Total</p>
-            <p className="text-xl font-bold font-mono text-mpd-gold">{formatCurrency(user.totalRakeback.toNumber())}</p>
+            <p className="text-xl font-bold font-mono text-mpd-gold">{formatCurrency(toNum(user.totalRakeback))}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-mpd-gray mb-1">Saldo Disponible</p>
-            <p className="text-xl font-bold font-mono text-mpd-green">{formatCurrency(user.availableBalance.toNumber())}</p>
+            <p className="text-xl font-bold font-mono text-mpd-green">{formatCurrency(toNum(user.availableBalance))}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-xs text-mpd-gray mb-1">Saldo Pendiente</p>
-            <p className="text-xl font-bold font-mono text-mpd-amber">{formatCurrency(user.pendingBalance.toNumber())}</p>
+            <p className="text-xl font-bold font-mono text-mpd-amber">{formatCurrency(toNum(user.pendingBalance))}</p>
           </CardContent>
         </Card>
         <Card>
