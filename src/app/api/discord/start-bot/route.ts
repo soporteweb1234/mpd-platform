@@ -1,17 +1,17 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import {
   startDiscordBot,
   stopDiscordBot,
   isBotConnected,
-  autoStartBot,
 } from "@/lib/discord/bot";
+import { requireAdmin, authzResponse } from "@/lib/auth/guards";
 
 export async function POST(request: Request) {
-  const session = await auth();
-  if (!session?.user || !["ADMIN", "SUPER_ADMIN"].includes(session.user.role)) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    await requireAdmin();
+  } catch (err) {
+    return authzResponse(err);
   }
 
   const body = await request.json().catch(() => ({}));

@@ -29,7 +29,7 @@ export function NotificationSendForm({ users }: Props) {
         message: fd.get("message") as string,
         link: (fd.get("link") as string) || undefined,
       });
-      if (result?.error) toast.error(result.error);
+      if (result && "error" in result) toast.error(result.error);
       else toast.success("Notificación enviada");
     } else {
       const result = await sendBulkNotification({
@@ -38,7 +38,7 @@ export function NotificationSendForm({ users }: Props) {
         message: fd.get("message") as string,
         link: (fd.get("link") as string) || undefined,
       });
-      if (result?.error) toast.error(result.error);
+      if (result && "error" in result) toast.error(result.error);
       else toast.success(`Notificación enviada a ${result.count} usuarios`);
     }
 

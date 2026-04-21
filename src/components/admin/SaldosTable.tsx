@@ -79,7 +79,7 @@ export function SaldosTable({ users }: { users: UserBalance[] }) {
         totalRakeback: total,
         investedBalance: invested,
       });
-      if (result.error) {
+      if ("error" in result) {
         setError(result.error);
       } else {
         setEditingId(null);
