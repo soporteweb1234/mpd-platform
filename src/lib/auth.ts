@@ -1,4 +1,4 @@
-import NextAuth from "next-auth";
+import NextAuth, { CredentialsSignin } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import Discord from "next-auth/providers/discord";
 import { prisma } from "@/lib/prisma";
@@ -6,6 +6,18 @@ import bcrypt from "bcryptjs";
 import { z } from "zod";
 import type { UserRole, PlayerStratum } from "@prisma/client";
 import { authConfig } from "./auth.config";
+
+// Subclases de CredentialsSignin: Auth.js v5 propaga `code` al caller (server
+// action) sin filtrar por URL. Permite al loginUser distinguir bad-creds de
+// cuenta bloqueada sin más texto, y deja que los errores de infra (Prisma
+// caído, schema desalineado) suban como AuthError con `cause.err` intacto —
+// ese es el patrón oficial documentado en authjs.dev.
+class InvalidCredentialsError extends CredentialsSignin {
+  code = "invalid_credentials";
+}
+class AccountBlockedError extends CredentialsSignin {
+  code = "account_blocked";
+}
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -73,65 +85,45 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
-        // NextAuth v5 Credentials provider swallows any throw inside authorize()
-        // y lo normaliza a CredentialsSignin. Sin este try/catch + log, un DB
-        // caído o un schema desincronizado (p.ej. columna investedBalance
-        // ausente en prod tras c6b7a05) se ve como "Email o contraseña
-        // incorrectos" y es indistinguible de un password malo.
+        // Patrón oficial Auth.js v5: throw InvalidCredentialsError para bad
+        // creds (así loginUser ve `error.code`), y deja propagar los errores
+        // de infra sin envolver — llegan al server action como AuthError con
+        // `cause.err === errorOriginal`, distinguibles sin ambigüedad.
+        const parsed = loginSchema.safeParse(credentials);
+        if (!parsed.success) throw new InvalidCredentialsError();
+
+        const user = await prisma.user.findUnique({
+          where: { email: parsed.data.email },
+        });
+
+        if (!user || user.deletedAt) throw new InvalidCredentialsError();
+        if (user.status === "BANNED") throw new AccountBlockedError();
+
+        const isValid = await bcrypt.compare(parsed.data.password, user.password);
+        if (!isValid) throw new InvalidCredentialsError();
+
+        // Side-effect: no debe tumbar el login si falla (p.ej. DB momentáneo).
         try {
-          const parsed = loginSchema.safeParse(credentials);
-          if (!parsed.success) {
-            console.warn("[authorize] invalid credentials format:", parsed.error.issues);
-            return null;
-          }
-
-          const user = await prisma.user.findUnique({
-            where: { email: parsed.data.email },
-          });
-
-          if (!user) {
-            console.warn("[authorize] user not found:", parsed.data.email);
-            return null;
-          }
-          if (user.deletedAt) {
-            console.warn("[authorize] user soft-deleted:", user.id);
-            return null;
-          }
-          if (user.status === "BANNED") {
-            console.warn("[authorize] user banned:", user.id);
-            return null;
-          }
-
-          const isValid = await bcrypt.compare(parsed.data.password, user.password);
-          if (!isValid) {
-            console.warn("[authorize] bad password for:", user.id);
-            return null;
-          }
-
           await prisma.user.update({
             where: { id: user.id },
             data: { lastLoginAt: new Date(), lastActiveAt: new Date() },
           });
-
-          return {
-            id: user.id,
-            email: user.email,
-            name: user.name,
-            image: user.avatar,
-            role: user.role,
-            stratum: user.stratum,
-            nickname: user.nickname,
-            discordId: user.discordId,
-            discordConnected: user.discordConnected,
-            onboardingStep: user.onboardingStep,
-          };
         } catch (err) {
-          const name = err instanceof Error ? err.name : "UnknownError";
-          const message = err instanceof Error ? err.message : String(err);
-          console.error("[authorize] INFRA error (not bad creds):", name, message);
-          if (err instanceof Error && err.stack) console.error(err.stack);
-          return null;
+          console.warn("[authorize] failed to update lastLoginAt, continuing:", err);
         }
+
+        return {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+          image: user.avatar,
+          role: user.role,
+          stratum: user.stratum,
+          nickname: user.nickname,
+          discordId: user.discordId,
+          discordConnected: user.discordConnected,
+          onboardingStep: user.onboardingStep,
+        };
       },
     }),
     ...discordProvider,

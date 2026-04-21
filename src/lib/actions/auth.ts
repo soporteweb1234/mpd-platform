@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/lib/auth";
-import { AuthError } from "next-auth";
+import { AuthError, CredentialsSignin } from "next-auth";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import bcrypt from "bcryptjs";
 import { registerSchema, changePasswordSchema } from "@/lib/validations";
@@ -67,14 +67,31 @@ export async function loginUser(formData: FormData) {
       redirectTo: "/dashboard",
     });
   } catch (error: unknown) {
-    // Next.js throws a special redirect error after successful signIn — re-throw so the redirect happens.
+    // Redirect interno de Next tras signIn exitoso — re-lanzar para que navegue.
     if (isRedirectError(error)) throw error;
 
-    // NextAuth wraps bad credentials as CredentialsSignin. Everything else is infra.
     if (error instanceof AuthError) {
+      // authorize() dejó propagar un error de infra (Prisma, bcrypt, etc.).
+      // Auth.js lo envuelve en AuthError pero conserva el original en cause.err.
+      // Si cause.err existe y NO es una subclase de CredentialsSignin, es infra.
+      const cause = (error as AuthError & { cause?: { err?: unknown } }).cause?.err;
+      if (cause && !(cause instanceof CredentialsSignin)) {
+        const name = cause instanceof Error ? cause.name : "UnknownError";
+        const message = cause instanceof Error ? cause.message : String(cause);
+        console.error("[loginUser] INFRA failure:", name, message);
+        if (cause instanceof Error && cause.stack) console.error(cause.stack);
+        return { error: "Servicio temporalmente no disponible. Inténtalo en unos segundos." };
+      }
+
+      // CredentialsSignin con code: viene de nuestras subclases en authorize().
       if (error.type === "CredentialsSignin") {
+        const code = (error as AuthError & { code?: string }).code;
+        if (code === "account_blocked") {
+          return { error: "Tu cuenta está suspendida. Contacta a soporte." };
+        }
         return { error: "Email o contraseña incorrectos" };
       }
+
       console.error("[loginUser] AuthError:", error.type, error.message);
       return { error: "Error de autenticación. Intenta de nuevo." };
     }
