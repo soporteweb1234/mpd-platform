@@ -42,7 +42,6 @@ export async function verifyBackupCode(
 ): Promise<{ valid: boolean; remaining: string[] }> {
   const normalized = input.trim().toUpperCase();
   for (let i = 0; i < hashes.length; i++) {
-    // eslint-disable-next-line no-await-in-loop
     const match = await bcrypt.compare(normalized, hashes[i]);
     if (match) {
       const remaining = [...hashes.slice(0, i), ...hashes.slice(i + 1)];
