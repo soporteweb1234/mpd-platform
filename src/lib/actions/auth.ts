@@ -3,10 +3,9 @@
 import { prisma } from "@/lib/prisma";
 import { signIn, signOut } from "@/lib/auth";
 import { AuthError, CredentialsSignin } from "next-auth";
-import { isRedirectError } from "next/dist/client/components/redirect-error";
 import bcrypt from "bcryptjs";
 import { registerSchema, changePasswordSchema } from "@/lib/validations";
-import { redirect } from "next/navigation";
+import { redirect, unstable_rethrow } from "next/navigation";
 
 export async function registerUser(formData: FormData) {
   const rawData = {
@@ -67,8 +66,11 @@ export async function loginUser(formData: FormData) {
       redirectTo: "/dashboard",
     });
   } catch (error: unknown) {
-    // Redirect interno de Next tras signIn exitoso — re-lanzar para que navegue.
-    if (isRedirectError(error)) throw error;
+    // unstable_rethrow (API pública next/navigation) re-lanza errores
+    // internos del framework: NEXT_REDIRECT, NEXT_NOT_FOUND, etc. Sustituye
+    // al import privado `next/dist/client/components/redirect-error` que
+    // Vercel rechaza en build strict. Ver next.js#76380.
+    unstable_rethrow(error);
 
     if (error instanceof AuthError) {
       // authorize() dejó propagar un error de infra (Prisma, bcrypt, etc.).
