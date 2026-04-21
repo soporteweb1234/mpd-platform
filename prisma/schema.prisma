@@ -156,6 +156,7 @@ model User {
   totalRakeback      Float           @default(0)
   availableBalance   Float           @default(0)
   pendingBalance     Float           @default(0)
+  investedBalance    Float           @default(0)
   lifetimeEarnings   Float           @default(0)
 
   // Gamification
