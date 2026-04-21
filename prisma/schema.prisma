@@ -159,6 +159,13 @@ model User {
   lifetimeEarnings   Decimal         @default(0) @db.Decimal(14, 2)
   investedBalance    Decimal         @default(0) @db.Decimal(14, 2)
 
+  // Two-factor auth (TOTP)
+  twoFactorEnabled   Boolean         @default(false)
+  twoFactorRequired  Boolean         @default(false)
+  twoFactorSecret    String?
+  backupCodes        String[]        @default([])
+  lastTwoFactorAt    DateTime?
+
   // Gamification
   points             Int             @default(0)
   level              Int             @default(1)

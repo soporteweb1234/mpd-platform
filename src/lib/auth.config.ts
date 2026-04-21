@@ -98,6 +98,25 @@ export const authConfig = {
         }
       }
 
+      // 2FA gate para admins marcados como required.
+      const u = auth?.user as Record<string, unknown> | undefined;
+      const isAdminPath =
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/api/admin") ||
+        pathname.startsWith("/api/discord");
+      const twoFactorRequired = Boolean(u?.twoFactorRequired);
+      const twoFactorEnabled = Boolean(u?.twoFactorEnabled);
+      if (isAdminPath && twoFactorRequired && !twoFactorEnabled) {
+        const isSetup = pathname.startsWith("/admin/2fa/setup");
+        const isEnroll = pathname.startsWith("/api/admin/2fa/");
+        if (!isSetup && !isEnroll) {
+          if (isApi) {
+            return Response.json({ error: "TwoFactorRequired" }, { status: 403 });
+          }
+          return Response.redirect(new URL("/admin/2fa/setup", request.nextUrl));
+        }
+      }
+
       return true;
     },
   },
