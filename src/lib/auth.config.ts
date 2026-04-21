@@ -38,8 +38,11 @@ export const authConfig = {
       const isLoggedIn = !!auth?.user;
       const pathname = request.nextUrl.pathname;
       const role = (auth?.user as Record<string, unknown>)?.role;
+      const isApi = pathname.startsWith("/api/");
 
       // Public routes — no auth required
+      // NOTE: /api/admin y /api/discord NO son públicos. Cada endpoint
+      // se guarda con requireAdmin() desde src/lib/auth/guards.ts.
       if (
         pathname === "/" ||
         pathname === "/login" ||
@@ -53,22 +56,38 @@ export const authConfig = {
         pathname.startsWith("/ref/") ||
         pathname.startsWith("/api/auth") ||
         pathname.startsWith("/api/chat") ||
-        pathname.startsWith("/api/discord") ||
         pathname.startsWith("/api/health")
       ) {
         return true;
       }
 
-      // Admin API routes — require ADMIN or SUPER_ADMIN, JSON 401 otherwise
+      // Admin API routes — require ADMIN or SUPER_ADMIN, JSON 401/403 otherwise
       if (pathname.startsWith("/api/admin")) {
-        if (!isLoggedIn || (role !== "ADMIN" && role !== "SUPER_ADMIN")) {
+        if (!isLoggedIn) {
           return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
+          return Response.json({ error: "Forbidden" }, { status: 403 });
+        }
+        return true;
+      }
+
+      // Discord API routes — require ADMIN or SUPER_ADMIN, JSON 401/403 otherwise
+      if (pathname.startsWith("/api/discord")) {
+        if (!isLoggedIn) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
+        if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
+          return Response.json({ error: "Forbidden" }, { status: 403 });
         }
         return true;
       }
 
       // Protected routes — require login
       if (!isLoggedIn) {
+        if (isApi) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
         return Response.redirect(new URL("/login", request.nextUrl));
       }
 
