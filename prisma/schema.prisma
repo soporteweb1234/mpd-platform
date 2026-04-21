@@ -197,6 +197,7 @@ model User {
   chatMessages          ChatMessage[]
   communityMessages     Message[]
   channelMemberships    ChannelMember[]
+  withdrawalRequests    WithdrawalRequest[]
 
   @@index([email])
   @@index([role])
@@ -618,6 +619,31 @@ model SystemSetting {
 
   updatedBy   String?
   updatedAt   DateTime @updatedAt
+}
+
+// ============================================
+// WITHDRAWAL REQUESTS (USDT — wallets gestionadas manualmente por admin)
+// ============================================
+
+model WithdrawalRequest {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  amountUsd   Decimal  @db.Decimal(12, 2)
+  network     String   // ERC20 | TRC20 | BEP20
+  toAddress   String
+
+  status      String   @default("PENDING") // PENDING | PAID | REJECTED
+  txHash      String?
+  processedBy String?
+  processedAt DateTime?
+  note        String?
+
+  createdAt   DateTime @default(now())
+
+  @@index([userId, status])
+  @@index([status, createdAt])
 }
 
 // ============================================
