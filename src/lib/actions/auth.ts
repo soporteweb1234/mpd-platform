@@ -5,6 +5,7 @@ import { signIn, signOut } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { registerSchema, changePasswordSchema } from "@/lib/validations";
 import { redirect } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 
 export async function registerUser(formData: FormData) {
   const rawData = {
@@ -65,9 +66,7 @@ export async function loginUser(formData: FormData) {
       redirectTo: "/dashboard",
     });
   } catch (error: unknown) {
-    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
-      throw error;
-    }
+    if (isRedirectError(error)) throw error;
     return { error: "Email o contraseña incorrectos" };
   }
 }
