@@ -50,6 +50,19 @@ declare module "next-auth" {
   }
 }
 
+// Discord provider is optional: only wire it up if both env vars exist.
+// Auth.js v5 throws "Configuration" for ALL logins (incl. credentials) when a
+// registered OAuth provider has undefined clientId/clientSecret.
+const discordProvider =
+  process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET
+    ? [
+        Discord({
+          clientId: process.env.DISCORD_CLIENT_ID,
+          clientSecret: process.env.DISCORD_CLIENT_SECRET,
+        }),
+      ]
+    : [];
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   ...authConfig,
   providers: [
@@ -92,10 +105,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
-    Discord({
-      clientId: process.env.DISCORD_CLIENT_ID!,
-      clientSecret: process.env.DISCORD_CLIENT_SECRET!,
-    }),
+    ...discordProvider,
   ],
   callbacks: {
     ...authConfig.callbacks,

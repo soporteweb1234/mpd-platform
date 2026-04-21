@@ -7,6 +7,10 @@ export const metadata = {
 };
 
 export default function LoginPage() {
+  const discordEnabled = Boolean(
+    process.env.DISCORD_CLIENT_ID && process.env.DISCORD_CLIENT_SECRET
+  );
+
   return (
     <Card>
       <CardHeader className="text-center">
@@ -14,7 +18,7 @@ export default function LoginPage() {
         <CardDescription>Accede a tu panel de Manager Poker Deal</CardDescription>
       </CardHeader>
       <CardContent>
-        <LoginForm />
+        <LoginForm discordEnabled={discordEnabled} />
         <p className="mt-6 text-center text-sm text-mpd-gray">
           ¿No tienes cuenta?{" "}
           <Link href="/register" className="text-mpd-gold hover:underline">
