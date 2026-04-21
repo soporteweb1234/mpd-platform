@@ -269,7 +269,6 @@ export async function adjustBalance(input: BalanceAdjustInput) {
 export async function updateUserRole(userId: string, role: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.user.update({
     where: { id: userId },
@@ -282,7 +281,6 @@ export async function updateUserRole(userId: string, role: string) {
 export async function updateUserStratum(userId: string, stratum: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.user.update({
     where: { id: userId },
@@ -295,7 +293,6 @@ export async function updateUserStratum(userId: string, stratum: string) {
 export async function suspendUser(userId: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.user.update({
     where: { id: userId },
@@ -319,7 +316,6 @@ export async function createRoom(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.pokerRoom.create({ data: data as any });
   return { success: true };
@@ -341,7 +337,6 @@ export async function createService(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.service.create({ data: data as any });
   return { success: true };
@@ -356,7 +351,6 @@ export async function sendNotification(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.notification.create({ data });
   return { success: true };
@@ -371,7 +365,6 @@ export async function sendBulkNotification(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   const where: Record<string, unknown> = { deletedAt: null, status: "ACTIVE" };
   if (data.filters?.stratum) where.stratum = data.filters.stratum;
@@ -405,7 +398,6 @@ export async function createKnowledgeArticle(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.knowledgeArticle.create({ data });
   return { success: true };
@@ -420,7 +412,6 @@ export async function updateKnowledgeArticle(id: string, data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.knowledgeArticle.update({ where: { id }, data });
   return { success: true };
@@ -429,7 +420,6 @@ export async function updateKnowledgeArticle(id: string, data: {
 export async function fulfillOrder(orderId: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
-  const { session } = authz;
 
   await prisma.serviceOrder.update({
     where: { id: orderId },
