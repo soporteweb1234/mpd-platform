@@ -1,22 +1,38 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { loadRakeback } from "@/lib/actions/admin";
+import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 interface Props {
   users: { id: string; name: string; email: string }[];
   rooms: { id: string; name: string; rakebackBase: number }[];
 }
 
+type PendingPayload = {
+  userId: string;
+  userLabel: string;
+  roomId: string;
+  roomLabel: string;
+  period: string;
+  periodStart: string;
+  periodEnd: string;
+  rakeGenerated: number;
+  rakebackPercent: number;
+  notes?: string;
+};
+
 export function RakebackLoadForm({ users, rooms }: Props) {
   const [loading, setLoading] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState("");
   const [rakebackPercent, setRakebackPercent] = useState(0);
+  const [pending, setPending] = useState<PendingPayload | null>(null);
+  const formRef = useRef<HTMLFormElement>(null);
 
   const handleRoomChange = (roomId: string) => {
     setSelectedRoom(roomId);
@@ -24,13 +40,18 @@ export function RakebackLoadForm({ users, rooms }: Props) {
     if (room) setRakebackPercent(room.rakebackBase);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setLoading(true);
     const fd = new FormData(e.currentTarget);
-    const result = await loadRakeback({
-      userId: fd.get("userId") as string,
-      roomId: fd.get("roomId") as string,
+    const userId = fd.get("userId") as string;
+    const roomId = fd.get("roomId") as string;
+    const user = users.find((u) => u.id === userId);
+    const room = rooms.find((r) => r.id === roomId);
+    setPending({
+      userId,
+      userLabel: user ? `${user.name} (${user.email})` : userId,
+      roomId,
+      roomLabel: room ? room.name : roomId,
       period: fd.get("period") as string,
       periodStart: fd.get("periodStart") as string,
       periodEnd: fd.get("periodEnd") as string,
@@ -38,18 +59,41 @@ export function RakebackLoadForm({ users, rooms }: Props) {
       rakebackPercent: Number(fd.get("rakebackPercent")),
       notes: (fd.get("notes") as string) || undefined,
     });
+  };
+
+  const commit = async () => {
+    if (!pending) return;
+    setLoading(true);
+    const result = await loadRakeback({
+      userId: pending.userId,
+      roomId: pending.roomId,
+      period: pending.period,
+      periodStart: pending.periodStart,
+      periodEnd: pending.periodEnd,
+      rakeGenerated: pending.rakeGenerated,
+      rakebackPercent: pending.rakebackPercent,
+      notes: pending.notes,
+    });
 
     if (result && "error" in result) {
       toast.error(result.error);
     } else {
       toast.success("Rakeback cargado correctamente");
-      (e.target as HTMLFormElement).reset();
+      formRef.current?.reset();
+      setSelectedRoom("");
+      setRakebackPercent(0);
     }
     setLoading(false);
+    setPending(null);
   };
 
+  const expectedAmount = pending
+    ? (pending.rakeGenerated * pending.rakebackPercent) / 100
+    : 0;
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <>
+    <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="userId">Jugador</Label>
         <select
@@ -128,5 +172,34 @@ export function RakebackLoadForm({ users, rooms }: Props) {
         {loading ? "Cargando..." : "Cargar Rakeback"}
       </Button>
     </form>
+
+    <ConfirmDialog
+      open={pending !== null}
+      onOpenChange={(o) => !o && !loading && setPending(null)}
+      title="Confirmar carga de rakeback"
+      loading={loading}
+      description={
+        pending ? (
+          <div className="space-y-2">
+            <p>
+              Se acreditará rakeback a{" "}
+              <span className="text-mpd-white">{pending.userLabel}</span>.
+            </p>
+            <ul className="text-xs font-mono text-mpd-white/80 bg-mpd-black/40 rounded p-2 space-y-0.5">
+              <li>Sala: {pending.roomLabel}</li>
+              <li>Período: {pending.period}</li>
+              <li>Rake generado: €{pending.rakeGenerated.toFixed(2)}</li>
+              <li>% Rakeback: {pending.rakebackPercent}%</li>
+              <li>
+                Crédito: <span className="text-mpd-gold">€{expectedAmount.toFixed(2)}</span>
+              </li>
+            </ul>
+          </div>
+        ) : null
+      }
+      confirmLabel="Confirmar carga"
+      onConfirm={commit}
+    />
+    </>
   );
 }
