@@ -37,8 +37,11 @@ export const authConfig = {
     async authorized({ auth, request }) {
       const isLoggedIn = !!auth?.user;
       const pathname = request.nextUrl.pathname;
+      const isApi = pathname.startsWith("/api/");
 
       // Public routes — no auth required
+      // NOTE: /api/admin y /api/discord NO son públicos. Cada endpoint
+      // se guarda con requireAdmin() desde src/lib/auth/guards.ts.
       if (
         pathname === "/" ||
         pathname === "/login" ||
@@ -50,25 +53,30 @@ export const authConfig = {
         pathname === "/faq" ||
         pathname.startsWith("/legal") ||
         pathname.startsWith("/ref/") ||
-        pathname.startsWith("/api/auth") ||
-        pathname.startsWith("/api/chat") ||
-        pathname.startsWith("/api/admin") ||
-        pathname.startsWith("/api/discord")
+        pathname.startsWith("/api/auth")
       ) {
         return true;
       }
 
       // Protected routes — require login
       if (!isLoggedIn) {
+        if (isApi) {
+          return Response.json({ error: "Unauthorized" }, { status: 401 });
+        }
         return Response.redirect(new URL("/login", request.nextUrl));
       }
 
       // Admin routes — require ADMIN or SUPER_ADMIN role
-      if (pathname.startsWith("/admin")) {
-        const role = (auth?.user as Record<string, unknown>)?.role;
-        if (role !== "ADMIN" && role !== "SUPER_ADMIN") {
-          return Response.redirect(new URL("/dashboard", request.nextUrl));
+      const role = (auth?.user as Record<string, unknown>)?.role;
+      const isAdminPath =
+        pathname.startsWith("/admin") ||
+        pathname.startsWith("/api/admin") ||
+        pathname.startsWith("/api/discord");
+      if (isAdminPath && role !== "ADMIN" && role !== "SUPER_ADMIN") {
+        if (isApi) {
+          return Response.json({ error: "Forbidden" }, { status: 403 });
         }
+        return Response.redirect(new URL("/dashboard", request.nextUrl));
       }
 
       return true;
