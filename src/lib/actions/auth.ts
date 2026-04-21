@@ -5,7 +5,9 @@ import { signIn, signOut } from "@/lib/auth";
 import bcrypt from "bcryptjs";
 import { registerSchema, changePasswordSchema } from "@/lib/validations";
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
+import { rateLimit, RateLimits, getClientIp } from "@/lib/security/ratelimit";
 
 export async function registerUser(formData: FormData) {
   const rawData = {
@@ -59,10 +61,21 @@ export async function registerUser(formData: FormData) {
 }
 
 export async function loginUser(formData: FormData) {
+  const email = (formData.get("email") as string) ?? "";
+  const password = (formData.get("password") as string) ?? "";
+
+  const ip = getClientIp(await headers());
+  const rl = await rateLimit(RateLimits.login, `${ip}:${email.toLowerCase()}`);
+  if (!rl.success) {
+    return {
+      error: "Demasiados intentos. Espera unos minutos antes de volver a intentarlo.",
+    };
+  }
+
   try {
     await signIn("credentials", {
-      email: formData.get("email") as string,
-      password: formData.get("password") as string,
+      email,
+      password,
       redirectTo: "/dashboard",
     });
   } catch (error: unknown) {

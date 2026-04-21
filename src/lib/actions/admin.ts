@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { checkAdmin } from "@/lib/auth/guards";
+import { rateLimit, RateLimits } from "@/lib/security/ratelimit";
 
 export async function loadRakeback(data: {
   userId: string;
@@ -16,6 +17,9 @@ export async function loadRakeback(data: {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
   const { session } = authz;
+
+  const rl = await rateLimit(RateLimits.adminMoney, session.user.id);
+  if (!rl.success) return { error: "Rate limit: espera unos segundos" };
 
   const rakebackAmount = (data.rakeGenerated * data.rakebackPercent) / 100;
 
@@ -63,6 +67,21 @@ export async function loadRakeback(data: {
         lifetimeEarnings: { increment: rakebackAmount },
       },
     }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "RAKEBACK_LOADED",
+        entityType: "user",
+        entityId: data.userId,
+        details: {
+          amount: rakebackAmount,
+          rakeGenerated: data.rakeGenerated,
+          rakebackPercent: data.rakebackPercent,
+          period: data.period,
+          roomId: data.roomId,
+        },
+      },
+    }),
   ]);
 
   return { success: true };
@@ -79,13 +98,21 @@ export async function updateUserBalances(data: {
   if ("error" in authz) return authz;
   const { session } = authz;
 
-  const user = await prisma.user.findUnique({
-    where: { id: data.userId },
-    select: { availableBalance: true },
-  });
-  if (!user) return { error: "Usuario no encontrado" };
+  const rl = await rateLimit(RateLimits.adminMoney, session.user.id);
+  if (!rl.success) return { error: "Rate limit: espera unos segundos" };
 
-  const delta = data.availableBalance - user.availableBalance;
+  const before = await prisma.user.findUnique({
+    where: { id: data.userId },
+    select: {
+      availableBalance: true,
+      pendingBalance: true,
+      totalRakeback: true,
+      investedBalance: true,
+    },
+  });
+  if (!before) return { error: "Usuario no encontrado" };
+
+  const delta = data.availableBalance - before.availableBalance;
 
   await prisma.$transaction([
     ...(delta !== 0
@@ -95,7 +122,7 @@ export async function updateUserBalances(data: {
               userId: data.userId,
               type: "MANUAL_ADJUSTMENT",
               amount: delta,
-              balanceBefore: user.availableBalance,
+              balanceBefore: before.availableBalance,
               balanceAfter: data.availableBalance,
               description: "Ajuste manual de saldo por admin",
               createdBy: session.user.id,
@@ -112,6 +139,23 @@ export async function updateUserBalances(data: {
         investedBalance: data.investedBalance,
       },
     }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "USER_BALANCES_UPDATED",
+        entityType: "user",
+        entityId: data.userId,
+        details: {
+          before,
+          after: {
+            availableBalance: data.availableBalance,
+            pendingBalance: data.pendingBalance,
+            totalRakeback: data.totalRakeback,
+            investedBalance: data.investedBalance,
+          },
+        },
+      },
+    }),
   ]);
 
   return { success: true };
@@ -125,6 +169,9 @@ export async function adjustBalance(data: {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
   const { session } = authz;
+
+  const rl = await rateLimit(RateLimits.adminMoney, session.user.id);
+  if (!rl.success) return { error: "Rate limit: espera unos segundos" };
 
   const user = await prisma.user.findUnique({
     where: { id: data.userId },
@@ -153,6 +200,20 @@ export async function adjustBalance(data: {
       data: {
         availableBalance: { increment: data.amount },
         lifetimeEarnings: data.amount > 0 ? { increment: data.amount } : undefined,
+      },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "BALANCE_ADJUSTED",
+        entityType: "user",
+        entityId: data.userId,
+        details: {
+          delta: data.amount,
+          balanceBefore: user.availableBalance,
+          balanceAfter: user.availableBalance + data.amount,
+          reason: data.description,
+        },
       },
     }),
   ]);

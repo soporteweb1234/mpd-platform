@@ -6,6 +6,7 @@ import {
   generateBackupCodes,
   hashBackupCodes,
 } from "@/lib/security/twofa";
+import { rateLimit, RateLimits } from "@/lib/security/ratelimit";
 
 /**
  * POST /api/admin/2fa/verify { code }
@@ -19,6 +20,14 @@ export async function POST(request: Request) {
     session = await requireAdmin();
   } catch (err) {
     return authzResponse(err);
+  }
+
+  const rl = await rateLimit(RateLimits.twoFactorVerify, session.user.id);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Demasiados intentos. Espera unos minutos." },
+      { status: 429 },
+    );
   }
 
   const body = (await request.json().catch(() => ({}))) as { code?: string };
