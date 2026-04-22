@@ -446,6 +446,189 @@ export async function createService(data: {
   if ("error" in authz) return authz;
 
   await prisma.service.create({ data: data as any });
+  revalidatePath("/admin/services");
+  revalidatePath("/dashboard/services");
+  return { success: true };
+}
+
+/** CAMBIOS 22 — edición completa de un servicio (FASE 4.A.7) */
+export type UpdateServiceInput = {
+  name: string;
+  slug: string;
+  category: string;
+  description: string;
+  shortDescription: string;
+  icon?: string | null;
+  priceEur: number;
+  priceInBalance?: number | null;
+  isRecurring?: boolean;
+  recurringPeriod?: string | null;
+  features?: string[];
+  setupInstructions?: string | null;
+  status?: "AVAILABLE" | "COMING_SOON" | "DISCONTINUED";
+  requiredStratum?: "NOVATO" | "SEMI_PRO" | "PROFESIONAL" | "REFERENTE" | null;
+  sortOrder?: number;
+  priceVisible?: boolean;
+  locked?: boolean;
+  lockedLabel?: string | null;
+};
+
+export async function updateService(serviceId: string, input: UpdateServiceInput) {
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
+
+  if (!serviceId) return { error: "Servicio inválido" };
+  if (!input.name?.trim()) return { error: "Nombre requerido" };
+  if (!input.slug?.trim()) return { error: "Slug requerido" };
+  if (typeof input.priceEur !== "number" || input.priceEur < 0) {
+    return { error: "Precio inválido" };
+  }
+
+  const before = await prisma.service.findUnique({
+    where: { id: serviceId },
+    select: { id: true, locked: true, priceVisible: true, status: true, priceEur: true },
+  });
+  if (!before) return { error: "Servicio no encontrado" };
+
+  await prisma.$transaction([
+    prisma.service.update({
+      where: { id: serviceId },
+      data: {
+        name: input.name.trim(),
+        slug: input.slug.trim(),
+        category: input.category as any,
+        description: input.description,
+        shortDescription: input.shortDescription,
+        icon: input.icon?.trim() || null,
+        priceEur: input.priceEur,
+        priceInBalance: input.priceInBalance ?? null,
+        isRecurring: input.isRecurring ?? false,
+        recurringPeriod: input.recurringPeriod ?? null,
+        features: input.features ?? [],
+        setupInstructions: input.setupInstructions?.trim() || null,
+        status: input.status ?? undefined,
+        requiredStratum: (input.requiredStratum ?? null) as any,
+        sortOrder: input.sortOrder ?? undefined,
+        priceVisible: input.priceVisible ?? true,
+        locked: input.locked ?? false,
+        lockedLabel: input.lockedLabel?.trim() || null,
+      },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "SERVICE_UPDATED",
+        entityType: "service",
+        entityId: serviceId,
+        details: {
+          lockedBefore: before.locked,
+          lockedAfter: input.locked ?? false,
+          priceVisibleBefore: before.priceVisible,
+          priceVisibleAfter: input.priceVisible ?? true,
+          priceBefore: before.priceEur,
+          priceAfter: input.priceEur,
+          statusBefore: before.status,
+          statusAfter: input.status ?? before.status,
+        },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/services");
+  revalidatePath(`/admin/services/${serviceId}`);
+  revalidatePath("/dashboard/services");
+  return { success: true };
+}
+
+/** CAMBIOS 22 — toggle rápido del candado desde el edit */
+export async function toggleServiceLock(serviceId: string, locked: boolean) {
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
+
+  const current = await prisma.service.findUnique({
+    where: { id: serviceId },
+    select: { id: true, locked: true },
+  });
+  if (!current) return { error: "Servicio no encontrado" };
+
+  await prisma.$transaction([
+    prisma.service.update({ where: { id: serviceId }, data: { locked } }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "SERVICE_LOCK_TOGGLED",
+        entityType: "service",
+        entityId: serviceId,
+        details: { from: current.locked, to: locked },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/services");
+  revalidatePath(`/admin/services/${serviceId}`);
+  revalidatePath("/dashboard/services");
+  return { success: true };
+}
+
+/** CAMBIOS 22 — añade un usuario a la whitelist del servicio */
+export async function addServiceWhitelist(serviceId: string, userId: string) {
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
+
+  if (!serviceId || !userId) return { error: "Parámetros inválidos" };
+
+  const [service, user] = await Promise.all([
+    prisma.service.findUnique({ where: { id: serviceId }, select: { id: true } }),
+    prisma.user.findUnique({ where: { id: userId }, select: { id: true } }),
+  ]);
+  if (!service) return { error: "Servicio no encontrado" };
+  if (!user) return { error: "Usuario no encontrado" };
+
+  await prisma.$transaction([
+    prisma.serviceWhitelist.upsert({
+      where: { serviceId_userId: { serviceId, userId } },
+      create: { serviceId, userId, addedBy: session.user.id },
+      update: {},
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "SERVICE_WHITELIST_ADDED",
+        entityType: "service",
+        entityId: serviceId,
+        details: { targetUserId: userId },
+      },
+    }),
+  ]);
+
+  revalidatePath(`/admin/services/${serviceId}`);
+  revalidatePath("/dashboard/services");
+  return { success: true };
+}
+
+export async function removeServiceWhitelist(serviceId: string, userId: string) {
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
+
+  await prisma.$transaction([
+    prisma.serviceWhitelist.deleteMany({ where: { serviceId, userId } }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "SERVICE_WHITELIST_REMOVED",
+        entityType: "service",
+        entityId: serviceId,
+        details: { targetUserId: userId },
+      },
+    }),
+  ]);
+
+  revalidatePath(`/admin/services/${serviceId}`);
+  revalidatePath("/dashboard/services");
   return { success: true };
 }
 

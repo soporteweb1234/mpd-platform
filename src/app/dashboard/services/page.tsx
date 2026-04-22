@@ -58,7 +58,7 @@ export default async function ServicesPage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const [services, userOrders, showPrices] = await Promise.all([
+  const [services, userOrders, showPrices, whitelistRows] = await Promise.all([
     prisma.service.findMany({
       where: { status: { not: "DISCONTINUED" } },
       orderBy: [{ sortOrder: "asc" }, { name: "asc" }],
@@ -69,7 +69,12 @@ export default async function ServicesPage() {
       orderBy: { createdAt: "desc" },
     }),
     getBooleanSetting(SETTING_KEYS.SERVICES_SHOW_PRICES, false),
+    prisma.serviceWhitelist.findMany({
+      where: { userId: session.user.id },
+      select: { serviceId: true },
+    }),
   ]);
+  const whitelistSet = new Set(whitelistRows.map((w) => w.serviceId));
 
   const stratum = session.user.stratum;
   const strataOrder = ["NOVATO", "SEMI_PRO", "PROFESIONAL", "REFERENTE"];
@@ -90,8 +95,11 @@ export default async function ServicesPage() {
           const requiredIndex = service.requiredStratum
             ? strataOrder.indexOf(service.requiredStratum)
             : -1;
-          const isLocked = requiredIndex > userStratumIndex;
+          const stratumLocked = requiredIndex > userStratumIndex;
+          const adminLocked = service.locked && !whitelistSet.has(service.id);
+          const isLocked = stratumLocked || adminLocked;
           const isComingSoon = service.status === "COMING_SOON";
+          const hidePrice = !service.priceVisible;
           const displayName =
             service.category === "VPN"
               ? resolveVpnLabel(service.name, service.slug)
@@ -109,7 +117,9 @@ export default async function ServicesPage() {
                   <div className="text-center">
                     <Lock className="h-6 w-6 text-mpd-gray mx-auto mb-1" />
                     <p className="text-xs text-mpd-gray">
-                      Disponible desde {getStratumLabel(service.requiredStratum!)}
+                      {stratumLocked
+                        ? `Disponible desde ${getStratumLabel(service.requiredStratum!)}`
+                        : service.lockedLabel ?? "No disponible"}
                     </p>
                   </div>
                 </div>
@@ -150,7 +160,7 @@ export default async function ServicesPage() {
                   </ul>
                 )}
                 <div className="mt-auto pt-3 border-t border-mpd-border/50 space-y-2">
-                  {showPrices && (
+                  {showPrices && !hidePrice && (
                     <div className="flex items-baseline gap-1">
                       <span className="text-lg font-bold font-mono text-mpd-gold">
                         {formatUSD(service.priceEur)}

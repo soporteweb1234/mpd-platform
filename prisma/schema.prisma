@@ -216,6 +216,7 @@ model User {
   communityMessages     Message[]
   channelMemberships    ChannelMember[]
   withdrawalRequests    WithdrawalRequest[]
+  serviceWhitelist      ServiceWhitelist[]
 
   @@index([email])
   @@index([role])
@@ -366,10 +367,29 @@ model Service {
   features           String[]
   setupInstructions  String?         @db.Text
 
+  // CAMBIOS 22 — FASE 4.A.7
+  priceVisible       Boolean         @default(true)
+  locked             Boolean         @default(false)
+  lockedLabel        String?
+
   createdAt          DateTime        @default(now())
   updatedAt          DateTime        @updatedAt
 
   orders             ServiceOrder[]
+  whitelist          ServiceWhitelist[]
+}
+
+/** CAMBIOS 22 — usuarios con acceso explícito a un servicio bloqueado */
+model ServiceWhitelist {
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+  addedBy   String?
+
+  @@id([serviceId, userId])
+  @@index([userId])
 }
 
 model ServiceOrder {
