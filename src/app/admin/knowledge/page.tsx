@@ -5,13 +5,28 @@ import { Badge } from "@/components/ui/badge";
 import { formatDate } from "@/lib/utils";
 import { Plus, BookOpen, Globe, Lock } from "lucide-react";
 import Link from "next/link";
+import { KnowledgeSendDialog } from "@/components/admin/KnowledgeSendDialog";
 
 export const metadata = { title: "Knowledge Base — Admin" };
 
 export default async function AdminKnowledgePage() {
-  const articles = await prisma.knowledgeArticle.findMany({
-    orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
-  });
+  const [articles, users] = await Promise.all([
+    prisma.knowledgeArticle.findMany({
+      orderBy: [{ category: "asc" }, { sortOrder: "asc" }],
+    }),
+    prisma.user.findMany({
+      where: { deletedAt: null, status: "ACTIVE" },
+      select: { id: true, name: true, email: true },
+      orderBy: { name: "asc" },
+      take: 500,
+    }),
+  ]);
+
+  const userOptions = users.map((u) => ({
+    id: u.id,
+    name: u.name ?? u.email,
+    email: u.email,
+  }));
 
   const categories = [...new Set(articles.map((a) => a.category))];
 
@@ -26,7 +41,10 @@ export default async function AdminKnowledgePage() {
         </Button>
       </div>
 
-      <p className="text-sm text-mpd-gray">{articles.length} artículos · {articles.filter((a) => a.isPublic).length} públicos · {articles.filter((a) => !a.isPublic).length} privados</p>
+      <p className="text-sm text-mpd-gray">
+        {articles.length} artículos · {articles.filter((a) => a.isPublic).length} públicos
+        · {articles.filter((a) => !a.isPublic).length} privados
+      </p>
 
       {categories.map((cat) => (
         <div key={cat}>
@@ -42,17 +60,44 @@ export default async function AdminKnowledgePage() {
                       <div>
                         <p className="text-sm text-mpd-white">{article.title}</p>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <Badge variant={article.isPublic ? "success" : "secondary"} className="text-[10px]">
-                            {article.isPublic ? <><Globe className="h-2.5 w-2.5 mr-0.5" />Público</> : <><Lock className="h-2.5 w-2.5 mr-0.5" />Privado</>}
+                          <Badge
+                            variant={article.isPublic ? "success" : "secondary"}
+                            className="text-[10px]"
+                          >
+                            {article.isPublic ? (
+                              <>
+                                <Globe className="h-2.5 w-2.5 mr-0.5" />
+                                Público
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="h-2.5 w-2.5 mr-0.5" />
+                                Privado
+                              </>
+                            )}
                           </Badge>
                           {article.tags.map((tag) => (
-                            <span key={tag} className="text-[10px] text-mpd-gray-dark">#{tag}</span>
+                            <span
+                              key={tag}
+                              className="text-[10px] text-mpd-gray-dark"
+                            >
+                              #{tag}
+                            </span>
                           ))}
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-xs text-mpd-gray-dark">{formatDate(article.updatedAt)}</span>
+                      <span className="text-xs text-mpd-gray-dark">
+                        {formatDate(article.updatedAt)}
+                      </span>
+                      <KnowledgeSendDialog
+                        articleId={article.id}
+                        articleSlug={article.slug}
+                        articleTitle={article.title}
+                        articleContent={article.content}
+                        users={userOptions}
+                      />
                       <Button variant="ghost" size="sm" asChild>
                         <Link href={`/admin/knowledge/${article.id}`}>Editar</Link>
                       </Button>
