@@ -143,90 +143,91 @@ enum BankingCandidateStatus {
 // ============================================
 
 model User {
-  id                 String          @id @default(cuid())
-  email              String          @unique
-  password           String
-  name               String
-  nickname           String?         @unique
-  avatar             String?
-  role               UserRole        @default(PLAYER)
-  stratum            PlayerStratum   @default(NOVATO)
-  status             UserStatus      @default(PENDING)
+  id       String        @id @default(cuid())
+  email    String        @unique
+  password String
+  name     String
+  nickname String?       @unique
+  avatar   String?
+  role     UserRole      @default(PLAYER)
+  stratum  PlayerStratum @default(NOVATO)
+  status   UserStatus    @default(PENDING)
 
   // Discord
-  discordId          String?         @unique
-  discordUsername     String?
-  discordConnected   Boolean         @default(false)
+  discordId        String? @unique
+  discordUsername  String?
+  discordConnected Boolean @default(false)
 
   // Onboarding
-  onboardingStep     Int             @default(0)
-  country            String?
-  playingLevel       String?
-  weeklyHours        Float?
-  primaryRoom        String?
-  secondaryRooms     String[]
-  goals              String[]
+  onboardingStep Int      @default(0)
+  country        String?
+  playingLevel   String?
+  weeklyHours    Float?
+  primaryRoom    String?
+  secondaryRooms String[]
+  goals          String[]
 
   // Profile (editable by user)
-  availability       String?         @db.Text
-  bio                String?         @db.Text
+  availability String? @db.Text
+  bio          String? @db.Text
 
   // Admin-only: notas comerciales privadas (CAMBIOS 18.4)
-  adminNotes         String?         @db.Text
+  adminNotes String? @db.Text
 
   // Financials — Decimal for money precision (never Float for balances)
-  totalRakeback      Decimal         @default(0) @db.Decimal(14, 2)
-  availableBalance   Decimal         @default(0) @db.Decimal(14, 2)
-  pendingBalance     Decimal         @default(0) @db.Decimal(14, 2)
-  investedBalance    Decimal         @default(0) @db.Decimal(14, 2)
-  lifetimeEarnings   Decimal         @default(0) @db.Decimal(14, 2)
+  totalRakeback    Decimal @default(0) @db.Decimal(14, 2)
+  availableBalance Decimal @default(0) @db.Decimal(14, 2)
+  pendingBalance   Decimal @default(0) @db.Decimal(14, 2)
+  investedBalance  Decimal @default(0) @db.Decimal(14, 2)
+  lifetimeEarnings Decimal @default(0) @db.Decimal(14, 2)
 
   // Two-factor auth (TOTP)
-  twoFactorEnabled   Boolean         @default(false)
-  twoFactorRequired  Boolean         @default(false)
-  twoFactorSecret    String?
-  backupCodes        String[]        @default([])
-  lastTwoFactorAt    DateTime?
+  twoFactorEnabled  Boolean   @default(false)
+  twoFactorRequired Boolean   @default(false)
+  twoFactorSecret   String?
+  backupCodes       String[]  @default([])
+  lastTwoFactorAt   DateTime?
 
   // Gamification
-  points             Int             @default(0)
-  level              Int             @default(1)
-  statusLevel        StatusLevel     @default(APRENDIZ)
-  prestigeScore      Int             @default(0)
-  reputationScore    Int             @default(0)
+  points          Int         @default(0)
+  level           Int         @default(1)
+  statusLevel     StatusLevel @default(APRENDIZ)
+  prestigeScore   Int         @default(0)
+  reputationScore Int         @default(0)
 
   // Referrals
-  referredById       String?
-  referredBy         User?           @relation("Referrals", fields: [referredById], references: [id])
-  referrals          User[]          @relation("Referrals")
-  referralCode       String          @unique @default(cuid())
+  referredById String?
+  referredBy   User?   @relation("Referrals", fields: [referredById], references: [id])
+  referrals    User[]  @relation("Referrals")
+  referralCode String  @unique @default(cuid())
 
   // Timestamps
-  lastLoginAt        DateTime?
-  lastActiveAt       DateTime?
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
-  deletedAt          DateTime?
+  lastLoginAt  DateTime?
+  lastActiveAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  deletedAt    DateTime?
 
   // Relations
-  rakebackRecords       RakebackRecord[]
-  balanceTransactions   BalanceTransaction[]
-  roomAffiliations      RoomAffiliation[]
-  serviceOrders         ServiceOrder[]
-  courseEnrollments      CourseEnrollment[]
-  stakingDeals          StakingDeal[]
-  achievements          UserAchievement[]
-  notifications         Notification[]
-  supportTickets        SupportTicket[]
-  activityLogs          ActivityLog[]
-  chatMessages          ChatMessage[]
-  communityMessages     Message[]
-  channelMemberships    ChannelMember[]
-  withdrawalRequests    WithdrawalRequest[]
-  serviceWhitelist      ServiceWhitelist[]
+  rakebackRecords               RakebackRecord[]
+  balanceTransactions           BalanceTransaction[]
+  roomAffiliations              RoomAffiliation[]
+  serviceOrders                 ServiceOrder[]
+  courseEnrollments             CourseEnrollment[]
+  stakingDeals                  StakingDeal[]
+  achievements                  UserAchievement[]
+  notifications                 Notification[]
+  supportTickets                SupportTicket[]
+  activityLogs                  ActivityLog[]
+  chatMessages                  ChatMessage[]
+  chatQueryLogs                 ChatQueryLog[]
+  communityMessages             Message[]
+  channelMemberships            ChannelMember[]
+  withdrawalRequests            WithdrawalRequest[]
+  serviceWhitelist              ServiceWhitelist[]
   referralCommissionsAsReferrer ReferralCommission[] @relation("ReferralCommissionReferrer")
   referralCommissionsAsReferred ReferralCommission[] @relation("ReferralCommissionReferred")
-  bankingCandidate      BankingCandidate?
+  bankingCandidate              BankingCandidate?
 
   @@index([email])
   @@index([role])
@@ -236,40 +237,40 @@ model User {
 }
 
 model PokerRoom {
-  id                String       @id @default(cuid())
-  name              String       @unique
-  slug              String       @unique
-  logo              String?
-  website           String?
-  affiliateCode     String
-  rakebackBase      Float
-  rakebackPremium   Float?
-  description       String?
-  setupGuide        String?      @db.Text
-  vpnRequired       Boolean      @default(false)
-  vpnInstructions   String?      @db.Text
-  countriesAllowed  String[]
-  countriesBlocked  String[]
-  status            RoomStatus   @default(ACTIVE)
-  sortOrder         Int          @default(0)
+  id               String     @id @default(cuid())
+  name             String     @unique
+  slug             String     @unique
+  logo             String?
+  website          String?
+  affiliateCode    String
+  rakebackBase     Float
+  rakebackPremium  Float?
+  description      String?
+  setupGuide       String?    @db.Text
+  vpnRequired      Boolean    @default(false)
+  vpnInstructions  String?    @db.Text
+  countriesAllowed String[]
+  countriesBlocked String[]
+  status           RoomStatus @default(ACTIVE)
+  sortOrder        Int        @default(0)
 
   // CAMBIOS 21.3 — FASE 4.A.6
-  shortDescription  String?
-  longDescription   String?      @db.Text
-  dealCurrent       Int?
-  dealMax           Int?
-  registrationCode  String?
-  master            String?
-  requiresRenting   Boolean      @default(false)
-  noKyc             Boolean      @default(false)
-  rating            Int?
+  shortDescription String?
+  longDescription  String? @db.Text
+  dealCurrent      Int?
+  dealMax          Int?
+  registrationCode String?
+  master           String?
+  requiresRenting  Boolean @default(false)
+  noKyc            Boolean @default(false)
+  rating           Int?
 
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  affiliations      RoomAffiliation[]
-  rakebackRecords   RakebackRecord[]
-  rakebackTiers     RakebackTier[]
+  affiliations        RoomAffiliation[]
+  rakebackRecords     RakebackRecord[]
+  rakebackTiers       RakebackTier[]
   referralCommissions ReferralCommission[]
 }
 
@@ -285,36 +286,36 @@ model RakebackTier {
 }
 
 model RoomAffiliation {
-  id             String    @id @default(cuid())
-  userId         String
-  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  roomId         String
-  room           PokerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  id     String    @id @default(cuid())
+  userId String
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId String
+  room   PokerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
-  playerRoomId   String?
-  nickname       String?
-  roomEmail      String?
+  playerRoomId       String?
+  nickname           String?
+  roomEmail          String?
   referralCodeAtRoom String?
-  codeId         String?
-  affiliatedAt   DateTime  @default(now())
-  verified       Boolean   @default(false)
-  verifiedAt     DateTime?
-  isPrimary      Boolean   @default(false)
-  status         String    @default("ACTIVE")
-  notes          String?
+  codeId             String?
+  affiliatedAt       DateTime  @default(now())
+  verified           Boolean   @default(false)
+  verifiedAt         DateTime?
+  isPrimary          Boolean   @default(false)
+  status             String    @default("ACTIVE")
+  notes              String?
 
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, roomId])
 }
 
 model RakebackRecord {
-  id              String         @id @default(cuid())
-  userId          String
-  user            User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  roomId          String
-  room            PokerRoom      @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  id     String    @id @default(cuid())
+  userId String
+  user   User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roomId String
+  room   PokerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   period          String
   periodStart     DateTime
@@ -324,12 +325,12 @@ model RakebackRecord {
   rakebackAmount  Float
   status          RakebackStatus @default(PENDING)
 
-  loadedBy        String?
-  loadedAt        DateTime?
-  notes           String?
+  loadedBy String?
+  loadedAt DateTime?
+  notes    String?
 
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([userId, roomId, period])
   @@index([userId])
@@ -338,64 +339,66 @@ model RakebackRecord {
 }
 
 model BalanceTransaction {
-  id             String          @id @default(cuid())
-  userId         String
-  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type           TransactionType
-  amount         Float
-  balanceBefore  Float
-  balanceAfter   Float
-  description    String
-  referenceId    String?
-  referenceType  String?
+  type          TransactionType
+  amount        Float
+  balanceBefore Float
+  balanceAfter  Float
+  description   String
+  referenceId   String?
+  referenceType String?
 
-  createdBy      String?
-  createdAt      DateTime        @default(now())
+  createdBy String?
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([type])
 }
 
 model Service {
-  id                 String          @id @default(cuid())
-  name               String
-  slug               String          @unique
-  category           ServiceCategory
-  description        String          @db.Text
-  shortDescription   String
-  icon               String?
+  id               String          @id @default(cuid())
+  name             String
+  slug             String          @unique
+  category         ServiceCategory
+  description      String          @db.Text
+  shortDescription String
+  icon             String?
 
-  priceEur           Float
-  priceInBalance     Float?
-  isRecurring        Boolean         @default(false)
-  recurringPeriod    String?
+  priceEur        Float
+  priceInBalance  Float?
+  isRecurring     Boolean @default(false)
+  recurringPeriod String?
 
-  status             ServiceStatus   @default(AVAILABLE)
-  requiredStratum    PlayerStratum?
-  sortOrder          Int             @default(0)
+  status          ServiceStatus  @default(AVAILABLE)
+  requiredStratum PlayerStratum?
+  sortOrder       Int            @default(0)
 
-  features           String[]
-  setupInstructions  String?         @db.Text
+  features          String[]
+  setupInstructions String?  @db.Text
 
   // CAMBIOS 22 — FASE 4.A.7
-  priceVisible       Boolean         @default(true)
-  locked             Boolean         @default(false)
-  lockedLabel        String?
+  priceVisible Boolean @default(true)
+  locked       Boolean @default(false)
+  lockedLabel  String?
 
-  createdAt          DateTime        @default(now())
-  updatedAt          DateTime        @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orders             ServiceOrder[]
-  whitelist          ServiceWhitelist[]
+  orders    ServiceOrder[]
+  whitelist ServiceWhitelist[]
 }
 
-/** CAMBIOS 22 — usuarios con acceso explícito a un servicio bloqueado */
+/**
+ * CAMBIOS 22 — usuarios con acceso explícito a un servicio bloqueado
+ */
 model ServiceWhitelist {
   serviceId String
-  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
   userId    String
-  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   addedAt   DateTime @default(now())
   addedBy   String?
 
@@ -404,152 +407,152 @@ model ServiceWhitelist {
 }
 
 model ServiceOrder {
-  id              String      @id @default(cuid())
-  userId          String
-  user            User        @relation(fields: [userId], references: [id], onDelete: Cascade)
-  serviceId       String
-  service         Service     @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  id        String  @id @default(cuid())
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  serviceId String
+  service   Service @relation(fields: [serviceId], references: [id], onDelete: Cascade)
 
   amount          Float
   paidWithBalance Boolean     @default(true)
   status          OrderStatus @default(PENDING)
 
-  notes           String?
-  deliveredAt     DateTime?
+  notes       String?
+  deliveredAt DateTime?
 
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([userId])
   @@index([serviceId])
 }
 
 model Course {
-  id                    String        @id @default(cuid())
-  title                 String
-  slug                  String        @unique
-  description           String        @db.Text
-  teacherId             String?
+  id          String  @id @default(cuid())
+  title       String
+  slug        String  @unique
+  description String  @db.Text
+  teacherId   String?
 
-  coverImageUrl         String?
-  tagline               String?
+  coverImageUrl String?
+  tagline       String?
 
-  priceEur              Float
-  priceWithAffiliation  Float?
-  maxStudents           Int           @default(12)
-  durationWeeks         Int           @default(12)
-  trialWeeks            Int           @default(2)
+  priceEur             Float
+  priceWithAffiliation Float?
+  maxStudents          Int    @default(12)
+  durationWeeks        Int    @default(12)
+  trialWeeks           Int    @default(2)
 
-  startDate             DateTime?
-  endDate               DateTime?
-  schedule              String?
+  startDate DateTime?
+  endDate   DateTime?
+  schedule  String?
 
-  status                CourseStatus  @default(DRAFT)
-  requiredStratum       PlayerStratum?
-  requiresAffiliation   Boolean       @default(true)
+  status              CourseStatus   @default(DRAFT)
+  requiredStratum     PlayerStratum?
+  requiresAffiliation Boolean        @default(true)
 
-  createdAt             DateTime      @default(now())
-  updatedAt             DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  enrollments           CourseEnrollment[]
-  lessons               CourseLesson[]
+  enrollments CourseEnrollment[]
+  lessons     CourseLesson[]
 }
 
 model CourseLesson {
-  id            String    @id @default(cuid())
-  courseId       String
-  course        Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  title         String
-  description   String?
-  lessonNumber  Int
-  scheduledAt   DateTime?
-  recordingUrl  String?
-  materials     String[]
+  title        String
+  description  String?
+  lessonNumber Int
+  scheduledAt  DateTime?
+  recordingUrl String?
+  materials    String[]
 
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model CourseEnrollment {
-  id                          String           @id @default(cuid())
-  userId                      String
-  user                        User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  courseId                     String
-  course                      Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  courseId String
+  course   Course @relation(fields: [courseId], references: [id], onDelete: Cascade)
 
-  status                      EnrollmentStatus @default(TRIAL)
-  paidAmount                  Float
-  paidWithBalance             Boolean          @default(false)
-  enrolledAt                  DateTime         @default(now())
-  completedAt                 DateTime?
+  status          EnrollmentStatus @default(TRIAL)
+  paidAmount      Float
+  paidWithBalance Boolean          @default(false)
+  enrolledAt      DateTime         @default(now())
+  completedAt     DateTime?
 
-  rakeGeneratedDuringCourse   Float            @default(0)
+  rakeGeneratedDuringCourse Float @default(0)
 
   @@unique([userId, courseId])
 }
 
 model StakingDeal {
-  id                  String        @id @default(cuid())
-  userId              String
-  user                User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  totalBankroll       Float
-  mpdContribution     Float
-  playerContribution  Float
-  profitSplitMpd      Float         @default(35)
-  profitSplitPlayer   Float         @default(65)
+  totalBankroll      Float
+  mpdContribution    Float
+  playerContribution Float
+  profitSplitMpd     Float @default(35)
+  profitSplitPlayer  Float @default(65)
 
-  status              StakingStatus @default(PROPOSED)
-  startDate           DateTime?
-  endDate             DateTime?
+  status    StakingStatus @default(PROPOSED)
+  startDate DateTime?
+  endDate   DateTime?
 
-  currentMakeup       Float         @default(0)
-  totalProfit         Float         @default(0)
-  totalLoss           Float         @default(0)
+  currentMakeup Float @default(0)
+  totalProfit   Float @default(0)
+  totalLoss     Float @default(0)
 
-  notes               String?       @db.Text
+  notes String? @db.Text
 
-  createdAt           DateTime      @default(now())
-  updatedAt           DateTime      @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  periods             StakingPeriod[]
+  periods StakingPeriod[]
 
   @@index([userId])
 }
 
 model StakingPeriod {
-  id            String      @id @default(cuid())
-  dealId        String
-  deal          StakingDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+  id     String      @id @default(cuid())
+  dealId String
+  deal   StakingDeal @relation(fields: [dealId], references: [id], onDelete: Cascade)
 
-  periodStart   DateTime
-  periodEnd     DateTime
-  profitLoss    Float
-  makeupBefore  Float
-  makeupAfter   Float
-  mpdShare      Float
-  playerShare   Float
+  periodStart  DateTime
+  periodEnd    DateTime
+  profitLoss   Float
+  makeupBefore Float
+  makeupAfter  Float
+  mpdShare     Float
+  playerShare  Float
 
-  notes         String?
-  createdAt     DateTime    @default(now())
+  notes     String?
+  createdAt DateTime @default(now())
 }
 
 model Achievement {
-  id            String            @id @default(cuid())
-  slug          String            @unique
+  id            String  @id @default(cuid())
+  slug          String  @unique
   name          String
   description   String
   icon          String
   category      String
-  pointsAwarded Int               @default(0)
+  pointsAwarded Int     @default(0)
   requiredValue Float?
-  isSecret      Boolean           @default(false)
-  sortOrder     Int               @default(0)
+  isSecret      Boolean @default(false)
+  sortOrder     Int     @default(0)
 
-  createdAt     DateTime          @default(now())
+  createdAt DateTime @default(now())
 
-  users         UserAchievement[]
+  users UserAchievement[]
 }
 
 model UserAchievement {
@@ -559,13 +562,13 @@ model UserAchievement {
   achievementId String
   achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
 
-  unlockedAt    DateTime    @default(now())
+  unlockedAt DateTime @default(now())
 
   @@unique([userId, achievementId])
 }
 
 model LeaderboardEntry {
-  id       String   @id @default(cuid())
+  id       String @id @default(cuid())
   userId   String
   period   String
   category String
@@ -579,51 +582,51 @@ model LeaderboardEntry {
 }
 
 model SupportTicket {
-  id         String         @id @default(cuid())
-  userId     String
-  user       User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  subject    String
-  category   String
-  priority   TicketPriority @default(MEDIUM)
-  status     TicketStatus   @default(OPEN)
+  subject  String
+  category String
+  priority TicketPriority @default(MEDIUM)
+  status   TicketStatus   @default(OPEN)
 
   assignedTo String?
   resolvedAt DateTime?
 
-  createdAt  DateTime       @default(now())
-  updatedAt  DateTime       @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  messages   TicketMessage[]
+  messages TicketMessage[]
 
   @@index([userId])
   @@index([status])
 }
 
 model TicketMessage {
-  id          String        @id @default(cuid())
-  ticketId    String
-  ticket      SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  id       String        @id @default(cuid())
+  ticketId String
+  ticket   SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
 
   senderId    String
   senderRole  String
-  content     String        @db.Text
+  content     String   @db.Text
   attachments String[]
 
-  createdAt   DateTime      @default(now())
+  createdAt DateTime @default(now())
 }
 
 model Notification {
-  id       String   @id @default(cuid())
-  userId   String
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  type     String
-  title    String
-  message  String
-  link     String?
-  read     Boolean  @default(false)
-  readAt   DateTime?
+  type    String
+  title   String
+  message String
+  link    String?
+  read    Boolean   @default(false)
+  readAt  DateTime?
 
   createdAt DateTime @default(now())
 
@@ -643,16 +646,52 @@ model KnowledgeArticle {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  chunks KnowledgeChunk[]
+}
+
+// FASE 5 — RAG chat
+model KnowledgeChunk {
+  id          String                       @id @default(cuid())
+  articleId   String
+  article     KnowledgeArticle             @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  chunkIndex  Int
+  content     String                       @db.Text
+  contentHash String
+  tokenCount  Int
+  // pgvector column added via raw SQL in migration; Prisma sees it as Unsupported.
+  embedding   Unsupported("vector(1536)")?
+  createdAt   DateTime                     @default(now())
+
+  @@unique([articleId, chunkIndex])
+  @@index([articleId])
+}
+
+model ChatQueryLog {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  query               String   @db.Text
+  answer              String?  @db.Text
+  maxSimilarity       Float?
+  chunkIds            String[]
+  latencyMs           Int?
+  tokensIn            Int?
+  tokensOut           Int?
+  escalatedToTicketId String?
+  createdAt           DateTime @default(now())
+
+  @@index([userId, createdAt(sort: Desc)])
 }
 
 model ChatMessage {
-  id       String   @id @default(cuid())
-  userId   String
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   botType  String
   role     String
-  content  String   @db.Text
+  content  String @db.Text
   metadata Json?
 
   createdAt DateTime @default(now())
@@ -661,9 +700,9 @@ model ChatMessage {
 }
 
 model ActivityLog {
-  id         String   @id @default(cuid())
-  userId     String?
-  user       User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  id     String  @id @default(cuid())
+  userId String?
+  user   User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   action     String
   entityType String?
@@ -671,7 +710,7 @@ model ActivityLog {
   details    Json?
   ipAddress  String?
 
-  createdAt  DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId])
   @@index([action])
@@ -679,14 +718,14 @@ model ActivityLog {
 }
 
 model SystemSetting {
-  id          String   @id @default(cuid())
-  key         String   @unique
-  value       String   @db.Text
+  id          String  @id @default(cuid())
+  key         String  @unique
+  value       String  @db.Text
   description String?
-  category    String   @default("GENERAL")
+  category    String  @default("GENERAL")
 
-  updatedBy   String?
-  updatedAt   DateTime @updatedAt
+  updatedBy String?
+  updatedAt DateTime @updatedAt
 }
 
 // ============================================
@@ -694,21 +733,21 @@ model SystemSetting {
 // ============================================
 
 model WithdrawalRequest {
-  id          String   @id @default(cuid())
-  userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  amountUsd   Decimal  @db.Decimal(12, 2)
-  network     String   // ERC20 | TRC20 | BEP20
-  toAddress   String
+  amountUsd Decimal @db.Decimal(12, 2)
+  network   String // ERC20 | TRC20 | BEP20
+  toAddress String
 
-  status      String   @default("PENDING") // PENDING | PAID | REJECTED
+  status      String    @default("PENDING") // PENDING | PAID | REJECTED
   txHash      String?
   processedBy String?
   processedAt DateTime?
   note        String?
 
-  createdAt   DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, status])
   @@index([status, createdAt])
@@ -719,21 +758,21 @@ model WithdrawalRequest {
 // ============================================
 
 model Channel {
-  id                String          @id @default(cuid())
-  name              String
-  slug              String          @unique
-  description       String?
-  category          String          // "GENERAL", "NIVEL", "SOPORTE", "HERRAMIENTAS", "FORMACION"
-  icon              String?
-  isPrivate         Boolean         @default(false)
-  requiredStratum   PlayerStratum?
-  requiredRole      UserRole?
-  sortOrder         Int             @default(0)
-  discordChannelId  String?         @unique
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
-  messages          Message[]
-  members           ChannelMember[]
+  id               String          @id @default(cuid())
+  name             String
+  slug             String          @unique
+  description      String?
+  category         String // "GENERAL", "NIVEL", "SOPORTE", "HERRAMIENTAS", "FORMACION"
+  icon             String?
+  isPrivate        Boolean         @default(false)
+  requiredStratum  PlayerStratum?
+  requiredRole     UserRole?
+  sortOrder        Int             @default(0)
+  discordChannelId String?         @unique
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+  messages         Message[]
+  members          ChannelMember[]
 }
 
 model ChannelMember {
@@ -792,13 +831,13 @@ model Reaction {
 // ============================================
 
 model ReferralCommission {
-  id                String    @id @default(cuid())
-  referrerId        String
-  referrer          User      @relation("ReferralCommissionReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
-  referredId        String
-  referred          User      @relation("ReferralCommissionReferred", fields: [referredId], references: [id], onDelete: Cascade)
-  roomId            String
-  room              PokerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  referrerId String
+  referrer   User      @relation("ReferralCommissionReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId String
+  referred   User      @relation("ReferralCommissionReferred", fields: [referredId], references: [id], onDelete: Cascade)
+  roomId     String
+  room       PokerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   commissionPercent Decimal   @db.Decimal(5, 2)
   periodStart       DateTime
@@ -807,8 +846,8 @@ model ReferralCommission {
   notes             String?   @db.Text
   createdBy         String
 
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@unique([referrerId, referredId, roomId, periodStart])
   @@index([referrerId])
@@ -818,24 +857,24 @@ model ReferralCommission {
 }
 
 model SuggestedQuestion {
-  id         String   @id @default(cuid())
-  question   String   @db.Text
+  id         String  @id @default(cuid())
+  question   String  @db.Text
   category   String?
-  priority   Int      @default(0)
-  active     Boolean  @default(true)
-  timesAsked Int      @default(0)
+  priority   Int     @default(0)
+  active     Boolean @default(true)
+  timesAsked Int     @default(0)
   createdBy  String
 
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([active, priority])
 }
 
 model BankingCandidate {
-  id              String                 @id @default(cuid())
-  userId          String                 @unique
-  user            User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  id     String @id @default(cuid())
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   status          BankingCandidateStatus @default(PENDING)
   monthlyBankroll Decimal?               @db.Decimal(12, 2)
@@ -845,8 +884,8 @@ model BankingCandidate {
   reviewedBy      String?
   reviewedAt      DateTime?
 
-  createdAt       DateTime               @default(now())
-  updatedAt       DateTime               @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([status])
 }
