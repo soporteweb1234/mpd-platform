@@ -43,6 +43,8 @@ export async function registerUser(formData: FormData) {
     }
   }
 
+  const signupIp = getClientIp(await headers()) || null;
+
   await prisma.user.create({
     data: {
       name: parsed.data.name,
@@ -50,6 +52,7 @@ export async function registerUser(formData: FormData) {
       password: hashedPassword,
       referredById,
       status: "PENDING",
+      signupIp,
     },
   });
 
