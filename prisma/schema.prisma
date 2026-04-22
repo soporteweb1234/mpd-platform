@@ -138,6 +138,21 @@ enum BankingCandidateStatus {
   REJECTED
 }
 
+enum CalendarEventCategory {
+  GENERAL
+  TORNEO
+  COMUNIDAD
+  MANTENIMIENTO
+  FORMACION
+  PAGOS
+}
+
+enum CalendarEventVisibility {
+  PUBLIC
+  STRATUM_ONLY
+  ADMIN_ONLY
+}
+
 // ============================================
 // MODELS
 // ============================================
@@ -228,6 +243,7 @@ model User {
   referralCommissionsAsReferrer ReferralCommission[] @relation("ReferralCommissionReferrer")
   referralCommissionsAsReferred ReferralCommission[] @relation("ReferralCommissionReferred")
   bankingCandidate              BankingCandidate?
+  calendarEventsCreated         CalendarEvent[]
 
   @@index([email])
   @@index([role])
@@ -888,4 +904,30 @@ model BankingCandidate {
   updatedAt DateTime @updatedAt
 
   @@index([status])
+}
+
+// ============================================
+// FASE 6 — Calendario global (§33)
+// ============================================
+model CalendarEvent {
+  id          String                  @id @default(cuid())
+  title       String
+  description String?                 @db.Text
+  startAt     DateTime
+  endAt       DateTime?
+  category    CalendarEventCategory   @default(GENERAL)
+  visibility  CalendarEventVisibility @default(PUBLIC)
+  color       String?
+  location    String?
+  url         String?
+
+  createdBy String
+  creator   User   @relation(fields: [createdBy], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startAt])
+  @@index([visibility, startAt])
+  @@index([createdBy])
 }
