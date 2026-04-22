@@ -1,6 +1,5 @@
 import { redirect } from "next/navigation";
-import { Sidebar } from "./Sidebar";
-import { NAVIGATION } from "@/lib/constants";
+import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdmin, AuthzError } from "@/lib/auth/guards";
 
 export async function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -16,19 +15,15 @@ export async function AdminLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-mpd-black">
-      <Sidebar
-        items={NAVIGATION.admin}
+      <AdminSidebar
         user={{
           name: session.user.name ?? "Admin",
           avatar: session.user.avatar,
           role: session.user.role,
         }}
-        type="admin"
       />
       <main className="lg:pl-64 min-h-screen transition-all duration-300">
-        <div className="p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">
-          {children}
-        </div>
+        <div className="p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">{children}</div>
       </main>
     </div>
   );

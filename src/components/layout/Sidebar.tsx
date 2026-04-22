@@ -25,6 +25,8 @@ interface NavItem {
   label: string;
   href: string;
   icon: string;
+  disabled?: boolean;
+  tooltip?: string;
 }
 
 interface SidebarProps {
@@ -158,6 +160,31 @@ export function Sidebar({ items, user, type }: SidebarProps) {
           {items.map((item) => {
             const Icon = iconMap[item.icon] || LayoutDashboard;
             const isActive = pathname === item.href || (item.href !== "/dashboard" && item.href !== "/admin" && pathname.startsWith(item.href));
+
+            if (item.disabled) {
+              return (
+                <div
+                  key={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2 rounded-lg text-sm mb-0.5 cursor-not-allowed text-mpd-gray/50",
+                    collapsed && "justify-center px-2"
+                  )}
+                  title={item.tooltip ?? "Próximamente"}
+                  aria-disabled="true"
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1">{item.label}</span>
+                      <Badge variant="outline" className="text-[9px] px-1.5 py-0">
+                        Próx.
+                      </Badge>
+                    </>
+                  )}
+                </div>
+              );
+            }
+
             return (
               <Link
                 key={item.href}
