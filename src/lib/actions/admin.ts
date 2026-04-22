@@ -198,6 +198,10 @@ export async function updateUserBalances(data: {
     throw err;
   }
 
+  revalidatePath(`/admin/users/${data.userId}`);
+  revalidatePath("/admin/saldos");
+  revalidatePath("/dashboard/balance");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
@@ -268,42 +272,108 @@ export async function adjustBalance(input: BalanceAdjustInput) {
     throw err;
   }
 
+  revalidatePath(`/admin/users/${data.userId}`);
+  revalidatePath("/admin/saldos");
+  revalidatePath("/dashboard/balance");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
 export async function updateUserRole(userId: string, role: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.user.update({
+  const before = await prisma.user.findUnique({
     where: { id: userId },
-    data: { role: role as any },
+    select: { role: true },
   });
+  if (!before) return { error: "Usuario no encontrado" };
 
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { role: role as any },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "USER_ROLE_UPDATED",
+        entityType: "user",
+        entityId: userId,
+        details: { from: before.role, to: role },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
 export async function updateUserStratum(userId: string, stratum: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.user.update({
+  const before = await prisma.user.findUnique({
     where: { id: userId },
-    data: { stratum: stratum as any },
+    select: { stratum: true },
   });
+  if (!before) return { error: "Usuario no encontrado" };
 
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { stratum: stratum as any },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "USER_STRATUM_UPDATED",
+        entityType: "user",
+        entityId: userId,
+        details: { from: before.stratum, to: stratum },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${userId}`);
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
 export async function suspendUser(userId: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.user.update({
+  const before = await prisma.user.findUnique({
     where: { id: userId },
-    data: { status: "SUSPENDED" },
+    select: { status: true },
   });
+  if (!before) return { error: "Usuario no encontrado" };
 
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { status: "SUSPENDED" },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "USER_SUSPENDED",
+        entityType: "user",
+        entityId: userId,
+        details: { statusBefore: before.status },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/users");
+  revalidatePath(`/admin/users/${userId}`);
   return { success: true };
 }
 
@@ -321,11 +391,25 @@ export async function createRoom(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.pokerRoom.create({ data: data as any });
+  const created = await prisma.$transaction(async (tx) => {
+    const room = await tx.pokerRoom.create({ data: data as any });
+    await tx.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "ROOM_CREATED",
+        entityType: "pokerRoom",
+        entityId: room.id,
+        details: { slug: room.slug, name: room.name },
+      },
+    });
+    return room;
+  });
+
   revalidatePath("/admin/rooms");
   revalidatePath("/dashboard/rooms");
-  return { success: true };
+  return { success: true, id: created.id };
 }
 
 /** CAMBIOS 21.3 — edición completa de una sala existente (FASE 4.A.6) */
@@ -444,11 +528,25 @@ export async function createService(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.service.create({ data: data as any });
+  const created = await prisma.$transaction(async (tx) => {
+    const service = await tx.service.create({ data: data as any });
+    await tx.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "SERVICE_CREATED",
+        entityType: "service",
+        entityId: service.id,
+        details: { slug: service.slug, name: service.name, category: service.category },
+      },
+    });
+    return service;
+  });
+
   revalidatePath("/admin/services");
   revalidatePath("/dashboard/services");
-  return { success: true };
+  return { success: true, id: created.id };
 }
 
 /** CAMBIOS 22 — edición completa de un servicio (FASE 4.A.7) */
@@ -641,8 +739,23 @@ export async function sendNotification(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.notification.create({ data });
+  await prisma.$transaction([
+    prisma.notification.create({ data }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "NOTIFICATION_SENT",
+        entityType: "user",
+        entityId: data.userId,
+        details: { type: data.type, title: data.title },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/notifications");
+  revalidatePath(`/admin/users/${data.userId}`);
   return { success: true };
 }
 
@@ -655,6 +768,7 @@ export async function sendBulkNotification(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
   const where: Record<string, unknown> = { deletedAt: null, status: "ACTIVE" };
   if (data.filters?.stratum) where.stratum = data.filters.stratum;
@@ -665,16 +779,32 @@ export async function sendBulkNotification(data: {
     select: { id: true },
   });
 
-  await prisma.notification.createMany({
-    data: users.map((u) => ({
-      userId: u.id,
-      type: data.type,
-      title: data.title,
-      message: data.message,
-      link: data.link,
-    })),
-  });
+  await prisma.$transaction([
+    prisma.notification.createMany({
+      data: users.map((u) => ({
+        userId: u.id,
+        type: data.type,
+        title: data.title,
+        message: data.message,
+        link: data.link,
+      })),
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "NOTIFICATION_BULK_SENT",
+        entityType: "notification",
+        details: {
+          type: data.type,
+          title: data.title,
+          count: users.length,
+          filters: data.filters ?? null,
+        },
+      },
+    }),
+  ]);
 
+  revalidatePath("/admin/notifications");
   return { success: true, count: users.length };
 }
 
@@ -688,9 +818,25 @@ export async function createKnowledgeArticle(data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.knowledgeArticle.create({ data });
-  return { success: true };
+  const created = await prisma.$transaction(async (tx) => {
+    const article = await tx.knowledgeArticle.create({ data });
+    await tx.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "KNOWLEDGE_CREATED",
+        entityType: "knowledgeArticle",
+        entityId: article.id,
+        details: { slug: article.slug, category: article.category, isPublic: article.isPublic },
+      },
+    });
+    return article;
+  });
+
+  revalidatePath("/admin/knowledge");
+  revalidatePath("/dashboard/knowledge");
+  return { success: true, id: created.id };
 }
 
 export async function updateKnowledgeArticle(id: string, data: {
@@ -702,20 +848,72 @@ export async function updateKnowledgeArticle(id: string, data: {
 }) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.knowledgeArticle.update({ where: { id }, data });
+  const before = await prisma.knowledgeArticle.findUnique({
+    where: { id },
+    select: { isPublic: true, category: true },
+  });
+  if (!before) return { error: "Artículo no encontrado" };
+
+  await prisma.$transaction([
+    prisma.knowledgeArticle.update({ where: { id }, data }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "KNOWLEDGE_UPDATED",
+        entityType: "knowledgeArticle",
+        entityId: id,
+        details: {
+          isPublicBefore: before.isPublic,
+          isPublicAfter: data.isPublic ?? before.isPublic,
+          categoryBefore: before.category,
+          categoryAfter: data.category ?? before.category,
+        },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/knowledge");
+  revalidatePath(`/admin/knowledge/${id}`);
+  revalidatePath("/dashboard/knowledge");
   return { success: true };
 }
 
 export async function fulfillOrder(orderId: string) {
   const authz = await checkAdmin();
   if ("error" in authz) return authz;
+  const { session } = authz;
 
-  await prisma.serviceOrder.update({
+  const order = await prisma.serviceOrder.findUnique({
     where: { id: orderId },
-    data: { status: "DELIVERED", deliveredAt: new Date() },
+    select: { userId: true, status: true, serviceId: true },
   });
+  if (!order) return { error: "Pedido no encontrado" };
 
+  await prisma.$transaction([
+    prisma.serviceOrder.update({
+      where: { id: orderId },
+      data: { status: "DELIVERED", deliveredAt: new Date() },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "ORDER_FULFILLED",
+        entityType: "serviceOrder",
+        entityId: orderId,
+        details: {
+          targetUserId: order.userId,
+          serviceId: order.serviceId,
+          statusBefore: order.status,
+        },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/services");
+  revalidatePath(`/admin/users/${order.userId}`);
+  revalidatePath("/dashboard/services");
   return { success: true };
 }
 
