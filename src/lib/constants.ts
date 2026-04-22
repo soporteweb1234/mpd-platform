@@ -55,6 +55,8 @@ export const STRATUM_THRESHOLDS = {
 export const NAVIGATION = {
   dashboard: [
     { label: "Dashboard", href: "/dashboard", icon: "LayoutDashboard" },
+    { label: "Calendario", href: "/dashboard/calendario", icon: "Calendar" },
+    { label: "Buscar", href: "#search", icon: "Search" },
     { label: "Saldo", href: "/dashboard/balance", icon: "Wallet" },
     { label: "Rakeback", href: "/dashboard/rakeback", icon: "TrendingUp" },
     { label: "Mis Salas", href: "/dashboard/rooms", icon: "Building2" },
@@ -70,6 +72,8 @@ export const NAVIGATION = {
   ],
   admin: [
     { label: "Dashboard", href: "/admin", icon: "LayoutDashboard" },
+    { label: "Calendario", href: "/admin/calendario", icon: "Calendar" },
+    { label: "Buscar", href: "#search", icon: "Search" },
     { label: "Saldo", href: "/admin/saldos", icon: "Wallet" },
     { label: "Usuarios", href: "/admin/users", icon: "Users" },
     { label: "Rakeback", href: "/admin/rakeback", icon: "TrendingUp" },

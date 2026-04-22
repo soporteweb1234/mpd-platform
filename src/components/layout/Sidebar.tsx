@@ -11,14 +11,15 @@ import {
   LayoutDashboard, TrendingUp, Wallet, Building2, Users, ShoppingBag,
   GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, MessagesSquare, Settings,
   GitBranch, BookOpen, Bell, Bot, Activity, Landmark, Radio, ChevronLeft,
-  ChevronRight, LogOut, Menu, X, Shield,
+  ChevronRight, LogOut, Menu, X, Shield, Calendar, Search,
 } from "lucide-react";
 import { logoutUser } from "@/lib/actions/auth";
+import { useSearchStore } from "@/lib/stores/search-store";
 
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard, TrendingUp, Wallet, Building2, Users, ShoppingBag,
   GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, MessagesSquare, Settings,
-  GitBranch, BookOpen, Bell, Bot, Activity, Landmark, Radio, Shield,
+  GitBranch, BookOpen, Bell, Bot, Activity, Landmark, Radio, Shield, Calendar, Search,
 };
 
 interface NavItem {
@@ -48,6 +49,7 @@ export function Sidebar({ items, user, type }: SidebarProps) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const openSearch = useSearchStore((s) => s.open);
 
   const initials = user.name
     .split(" ")
@@ -193,6 +195,34 @@ export function Sidebar({ items, user, type }: SidebarProps) {
                     </>
                   )}
                 </div>
+              );
+            }
+
+            if (item.href === "#search") {
+              return (
+                <button
+                  key={item.href}
+                  type="button"
+                  onClick={() => {
+                    setMobileOpen(false);
+                    openSearch();
+                  }}
+                  className={cn(
+                    "w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors mb-0.5 text-mpd-gray hover:text-mpd-white hover:bg-mpd-surface-hover",
+                    collapsed && "justify-center px-2"
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span className="flex-1 text-left">{item.label}</span>
+                      <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-mpd-border bg-mpd-black/50 px-1.5 py-0.5 text-[10px] font-mono text-mpd-gray">
+                        ⌘K
+                      </kbd>
+                    </>
+                  )}
+                </button>
               );
             }
 
