@@ -164,6 +164,9 @@ model User {
   availability       String?         @db.Text
   bio                String?         @db.Text
 
+  // Admin-only: notas comerciales privadas (CAMBIOS 18.4)
+  adminNotes         String?         @db.Text
+
   // Financials — Decimal for money precision (never Float for balances)
   totalRakeback      Decimal         @default(0) @db.Decimal(14, 2)
   availableBalance   Decimal         @default(0) @db.Decimal(14, 2)

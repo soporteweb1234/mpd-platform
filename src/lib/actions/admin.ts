@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { checkAdmin } from "@/lib/auth/guards";
@@ -426,5 +427,40 @@ export async function fulfillOrder(orderId: string) {
     data: { status: "DELIVERED", deliveredAt: new Date() },
   });
 
+  return { success: true };
+}
+
+/** CAMBIOS 18.4 — notas comerciales privadas del admin sobre un usuario */
+export async function updateAdminNotes(userId: string, notes: string) {
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
+
+  if (typeof notes !== "string") return { error: "Formato inválido" };
+  const trimmed = notes.trim().slice(0, 4000);
+
+  const target = await prisma.user.findUnique({
+    where: { id: userId },
+    select: { id: true },
+  });
+  if (!target) return { error: "Usuario no encontrado" };
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: userId },
+      data: { adminNotes: trimmed.length === 0 ? null : trimmed },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "ADMIN_NOTES_UPDATED",
+        entityType: "user",
+        entityId: userId,
+        details: { length: trimmed.length },
+      },
+    }),
+  ]);
+
+  revalidatePath(`/admin/users/${userId}`);
   return { success: true };
 }

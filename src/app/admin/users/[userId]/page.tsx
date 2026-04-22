@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { formatCurrency, formatDate, getInitials, getRoleLabel, getStratumLabel } from "@/lib/utils";
 import { toNum } from "@/lib/money";
 import Link from "next/link";
-import { TrendingUp, Wallet, Users, Calendar, Mail, Globe, Gamepad2 } from "lucide-react";
+import { TrendingUp, Users, Calendar, Mail, Globe, Gamepad2 } from "lucide-react";
+import { AdminNotesCard } from "@/components/admin/AdminNotesCard";
 
 export const metadata = { title: "Perfil de Usuario — Admin" };
 
@@ -153,6 +154,8 @@ export default async function AdminUserDetailPage({
           </CardContent>
         </Card>
       </div>
+
+      <AdminNotesCard userId={user.id} initialNotes={user.adminNotes ?? ""} />
 
       <div className="flex gap-3">
         <Button variant="outline" asChild>
