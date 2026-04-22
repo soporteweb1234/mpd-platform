@@ -7,6 +7,7 @@ import { DataCard } from "@/components/shared/DataCard";
 import { TrendingUp, Upload, Calendar } from "lucide-react";
 import Link from "next/link";
 import { RakebackLoadForm } from "@/components/forms/RakebackLoadForm";
+import { toNum } from "@/lib/money";
 
 export const metadata = { title: "Rakeback — Admin" };
 
@@ -30,7 +31,7 @@ export default async function AdminRakebackPage() {
     }),
     prisma.user.findMany({
       where: { deletedAt: null, status: "ACTIVE" },
-      select: { id: true, name: true, email: true },
+      select: { id: true, name: true, email: true, availableBalance: true },
       orderBy: { name: "asc" },
     }),
     prisma.pokerRoom.findMany({
@@ -76,7 +77,15 @@ export default async function AdminRakebackPage() {
             <CardTitle className="text-base">Cargar Rakeback Individual</CardTitle>
           </CardHeader>
           <CardContent>
-            <RakebackLoadForm users={users} rooms={rooms} />
+            <RakebackLoadForm
+              users={users.map((u) => ({
+                id: u.id,
+                name: u.name,
+                email: u.email,
+                availableBalance: toNum(u.availableBalance),
+              }))}
+              rooms={rooms}
+            />
           </CardContent>
         </Card>
 

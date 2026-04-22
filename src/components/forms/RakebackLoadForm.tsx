@@ -10,13 +10,14 @@ import { loadRakeback } from "@/lib/actions/admin";
 import { ConfirmDialog } from "@/components/shared/ConfirmDialog";
 
 interface Props {
-  users: { id: string; name: string; email: string }[];
+  users: { id: string; name: string; email: string; availableBalance: number }[];
   rooms: { id: string; name: string; rakebackBase: number }[];
 }
 
 type PendingPayload = {
   userId: string;
   userLabel: string;
+  balanceBefore: number;
   roomId: string;
   roomLabel: string;
   period: string;
@@ -50,6 +51,7 @@ export function RakebackLoadForm({ users, rooms }: Props) {
     setPending({
       userId,
       userLabel: user ? `${user.name} (${user.email})` : userId,
+      balanceBefore: user?.availableBalance ?? 0,
       roomId,
       roomLabel: room ? room.name : roomId,
       period: fd.get("period") as string,
@@ -180,7 +182,7 @@ export function RakebackLoadForm({ users, rooms }: Props) {
       loading={loading}
       description={
         pending ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             <p>
               Se acreditará rakeback a{" "}
               <span className="text-mpd-white">{pending.userLabel}</span>.
@@ -194,6 +196,16 @@ export function RakebackLoadForm({ users, rooms }: Props) {
                 Crédito: <span className="text-mpd-gold">€{expectedAmount.toFixed(2)}</span>
               </li>
             </ul>
+            <div className="grid grid-cols-2 gap-2 text-xs font-mono">
+              <div className="bg-mpd-black/40 rounded p-2">
+                <p className="text-mpd-gray text-[10px] uppercase tracking-wider">Saldo antes</p>
+                <p className="text-mpd-white">€{pending.balanceBefore.toFixed(2)}</p>
+              </div>
+              <div className="bg-mpd-green/10 border border-mpd-green/30 rounded p-2">
+                <p className="text-mpd-gray text-[10px] uppercase tracking-wider">Saldo después</p>
+                <p className="text-mpd-green">€{(pending.balanceBefore + expectedAmount).toFixed(2)}</p>
+              </div>
+            </div>
           </div>
         ) : null
       }

@@ -88,6 +88,10 @@ export async function loadRakeback(input: RakebackLoadInput) {
     });
   });
 
+  revalidatePath("/admin/rakeback");
+  revalidatePath(`/admin/users/${data.userId}`);
+  revalidatePath("/dashboard/rakeback");
+  revalidatePath("/dashboard");
   return { success: true };
 }
 
