@@ -75,7 +75,7 @@ export function ChatInterface({ botType, userId }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       role: "assistant",
-      content: "¡Hola! Soy **EDU**, el asistente de Manager Poker Deal. Puedo ayudarte con dudas sobre rakeback, salas, servicios, saldo, galones y más.\n\n¿En qué puedo ayudarte?",
+      content: "¡Hola! Soy **MIKE**, el asistente 24h de Manager Poker Deals. ¿En qué puedo ayudarte ahora mismo?",
     },
   ]);
   const [input, setInput] = useState("");

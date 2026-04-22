@@ -15,6 +15,7 @@ export default async function SettingsPage() {
     select: {
       id: true, name: true, nickname: true, email: true, country: true,
       playingLevel: true, weeklyHours: true, primaryRoom: true,
+      availability: true, bio: true,
       discordConnected: true, discordUsername: true,
     },
   });

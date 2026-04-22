@@ -10,7 +10,16 @@ import { toast } from "sonner";
 import { createTicket } from "@/lib/actions/support";
 import { TICKET_CATEGORIES } from "@/lib/constants";
 
-export function CreateTicketForm({ userId }: { userId: string }) {
+interface Props {
+  userId: string;
+  defaults?: {
+    subject?: string;
+    category?: string;
+    message?: string;
+  };
+}
+
+export function CreateTicketForm({ userId, defaults }: Props) {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
@@ -38,7 +47,13 @@ export function CreateTicketForm({ userId }: { userId: string }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="subject">Asunto</Label>
-        <Input name="subject" id="subject" required placeholder="Describe brevemente tu problema" />
+        <Input
+          name="subject"
+          id="subject"
+          required
+          defaultValue={defaults?.subject}
+          placeholder="Describe brevemente tu problema"
+        />
       </div>
       <div className="space-y-2">
         <Label htmlFor="category">Categoría</Label>
@@ -46,6 +61,7 @@ export function CreateTicketForm({ userId }: { userId: string }) {
           name="category"
           id="category"
           required
+          defaultValue={defaults?.category ?? ""}
           className="flex h-10 w-full rounded-lg border border-mpd-border bg-mpd-surface px-3 py-2 text-sm text-mpd-white focus:border-mpd-gold focus:outline-none"
         >
           <option value="">Seleccionar...</option>
@@ -56,7 +72,14 @@ export function CreateTicketForm({ userId }: { userId: string }) {
       </div>
       <div className="space-y-2">
         <Label htmlFor="message">Mensaje</Label>
-        <Textarea name="message" id="message" rows={5} required placeholder="Explica tu problema con el mayor detalle posible..." />
+        <Textarea
+          name="message"
+          id="message"
+          rows={5}
+          required
+          defaultValue={defaults?.message}
+          placeholder="Explica tu problema con el mayor detalle posible..."
+        />
       </div>
       <Button type="submit" className="w-full" disabled={loading}>
         {loading ? "Creando..." : "Crear Ticket"}

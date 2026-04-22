@@ -5,9 +5,21 @@ import { CreateTicketForm } from "@/components/forms/CreateTicketForm";
 
 export const metadata = { title: "Nuevo Ticket" };
 
-export default async function NewTicketPage() {
+type SearchParams = Promise<{
+  subject?: string;
+  category?: string;
+  message?: string;
+}>;
+
+export default async function NewTicketPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
   const session = await auth();
   if (!session?.user) redirect("/login");
+
+  const sp = await searchParams;
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -17,7 +29,14 @@ export default async function NewTicketPage() {
           <CardTitle className="text-base">Describe tu problema</CardTitle>
         </CardHeader>
         <CardContent>
-          <CreateTicketForm userId={session.user.id} />
+          <CreateTicketForm
+            userId={session.user.id}
+            defaults={{
+              subject: sp.subject,
+              category: sp.category,
+              message: sp.message,
+            }}
+          />
         </CardContent>
       </Card>
     </div>

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { auth } from "@/lib/auth";
 
-const SYSTEM_PROMPT = `Eres EDU, el asistente experto de Manager Poker Deal (MPD). Personalidad: profesional, cercana, directa. Experto en poker online, rakeback y gestión de bankroll.
+const SYSTEM_PROMPT = `Eres MIKE, el asistente 24h de Manager Poker Deals (MPD). Personalidad: educado, correcto, formal, asertivo, orientado a soluciones y empático con el estrés del usuario. Experto en poker online, rakeback y gestión de bankroll. Usa lenguaje humano y variado — evita repetir las mismas frases literalmente.
 
 ## RAKEBACK NGR
 - **Rake**: comisión que cobra la sala en cada mano/torneo

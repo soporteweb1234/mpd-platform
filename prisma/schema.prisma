@@ -160,6 +160,10 @@ model User {
   secondaryRooms     String[]
   goals              String[]
 
+  // Profile (editable by user)
+  availability       String?         @db.Text
+  bio                String?         @db.Text
+
   // Financials — Decimal for money precision (never Float for balances)
   totalRakeback      Decimal         @default(0) @db.Decimal(14, 2)
   availableBalance   Decimal         @default(0) @db.Decimal(14, 2)
@@ -381,6 +385,9 @@ model Course {
   slug                  String        @unique
   description           String        @db.Text
   teacherId             String?
+
+  coverImageUrl         String?
+  tagline               String?
 
   priceEur              Float
   priceWithAffiliation  Float?

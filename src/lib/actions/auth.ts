@@ -182,6 +182,11 @@ export async function changePassword(userId: string, formData: FormData) {
 }
 
 export async function updateProfile(userId: string, data: Record<string, unknown>) {
+  const trimOrNull = (v: unknown) => {
+    if (typeof v !== "string") return null;
+    const t = v.trim();
+    return t.length === 0 ? null : t;
+  };
   await prisma.user.update({
     where: { id: userId },
     data: {
@@ -191,6 +196,8 @@ export async function updateProfile(userId: string, data: Record<string, unknown
       playingLevel: data.playingLevel as string | null,
       weeklyHours: data.weeklyHours as number | null,
       primaryRoom: data.primaryRoom as string | null,
+      availability: trimOrNull(data.availability)?.slice(0, 300) ?? null,
+      bio: trimOrNull(data.bio)?.slice(0, 1000) ?? null,
     },
   });
   return { success: true };
