@@ -90,13 +90,7 @@ export const NAVIGATION = {
     { label: "Notificaciones", href: "/admin/notifications", icon: "Bell" },
     { label: "Bot Interno", href: "/admin/bot", icon: "Bot" },
     { label: "Actividad", href: "/admin/activity", icon: "Activity" },
-    {
-      label: "Discord Sync",
-      href: "/admin/settings/discord",
-      icon: "MessageSquare",
-      disabled: true,
-      tooltip: "Próximamente (FASE 8)",
-    },
+    { label: "Discord Sync", href: "/admin/settings/discord", icon: "MessageSquare" },
     { label: "Configuración", href: "/admin/settings", icon: "Settings" },
   ],
 } as const;
