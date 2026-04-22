@@ -13,6 +13,12 @@ import {
   type BalanceAdjustInput,
 } from "@/lib/validations";
 import { reindexArticle } from "@/lib/ai/reindex";
+import {
+  computeReferralCommissions,
+  creditReferralCommissions,
+  getReferralPolicy,
+} from "@/lib/referrals/engine";
+import { evaluateMilestones } from "@/lib/referrals/milestones";
 
 export async function loadRakeback(input: RakebackLoadInput) {
   const authz = await checkAdmin();
@@ -36,8 +42,17 @@ export async function loadRakeback(input: RakebackLoadInput) {
   });
   if (!userExists) return { error: "Usuario no encontrado" };
 
+  // Pre-compute referral plan outside the transaction (read-only)
+  const planned = await computeReferralCommissions({
+    referredUserId: data.userId,
+    rakebackAmount,
+    roomId: data.roomId,
+    rakebackRecordId: null,
+  });
+  const policy = await getReferralPolicy();
+
   await prisma.$transaction(async (tx) => {
-    await tx.rakebackRecord.create({
+    const record = await tx.rakebackRecord.create({
       data: {
         userId: data.userId,
         roomId: data.roomId,
@@ -52,6 +67,7 @@ export async function loadRakeback(input: RakebackLoadInput) {
         loadedAt: new Date(),
         notes: data.notes,
       },
+      select: { id: true },
     });
 
     await creditBalance(
@@ -72,6 +88,10 @@ export async function loadRakeback(input: RakebackLoadInput) {
       },
     });
 
+    await creditReferralCommissions(tx, planned, policy.holdDays, record.id);
+
+    await evaluateMilestones(tx, data.userId);
+
     await tx.activityLog.create({
       data: {
         userId: session.user.id,
@@ -84,6 +104,7 @@ export async function loadRakeback(input: RakebackLoadInput) {
           rakebackPercent: data.rakebackPercent,
           period: data.period,
           roomId: data.roomId,
+          referralAttributions: planned.length,
         },
       },
     });

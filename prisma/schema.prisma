@@ -169,6 +169,14 @@ enum CalendarEventVisibility {
   ADMIN_ONLY
 }
 
+enum ReferralAttributionStatus {
+  PENDING
+  AVAILABLE
+  HELD
+  REJECTED
+  REVERSED
+}
+
 // ============================================
 // MODELS
 // ============================================
@@ -239,6 +247,10 @@ model User {
   updatedAt    DateTime  @updatedAt
   deletedAt    DateTime?
 
+  // FASE 9 referral anti-fraud + opt-out
+  signupIp          String?
+  leaderboardOptOut Boolean @default(false)
+
   // Relations
   rakebackRecords               RakebackRecord[]
   balanceTransactions           BalanceTransaction[]
@@ -262,6 +274,11 @@ model User {
   calendarEventsCreated         CalendarEvent[]
   paymentIntents                PaymentIntent[]
   discordRoleSyncLogs           DiscordRoleSyncLog[]
+  attributionsAsReferrer        ReferralAttribution[]    @relation("AttributionReferrer")
+  attributionsAsReferred        ReferralAttribution[]    @relation("AttributionReferred")
+  milestoneAwardsAsReferrer     ReferralMilestoneAward[] @relation("MilestoneReferrer")
+  milestoneAwardsAsReferred     ReferralMilestoneAward[] @relation("MilestoneReferred")
+  referralFraudFlags            ReferralFraudFlag[]
 
   @@index([email])
   @@index([role])
@@ -1020,4 +1037,94 @@ model DiscordRoleSyncLog {
   @@index([userId, createdAt])
   @@index([createdAt])
   @@index([success, createdAt])
+}
+
+// ============================================
+// REFERRAL ENGINE — FASE 9
+// ============================================
+
+model ReferralAttribution {
+  id               String                    @id @default(cuid())
+  referrerId       String
+  referrer         User                      @relation("AttributionReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId       String
+  referred         User                      @relation("AttributionReferred", fields: [referredId], references: [id], onDelete: Cascade)
+  level            Int
+  rakebackRecordId String?
+  sourceAmount     Decimal                   @db.Decimal(14, 2)
+  commissionPct    Decimal                   @db.Decimal(5, 2)
+  amount           Decimal                   @db.Decimal(14, 2)
+  status           ReferralAttributionStatus @default(PENDING)
+  maturedAt        DateTime?
+  paidAt           DateTime?
+  balanceTxId      String?
+  flaggedReason    String?
+  createdAt        DateTime                  @default(now())
+
+  @@unique([referrerId, rakebackRecordId, level])
+  @@index([referrerId, createdAt])
+  @@index([referredId, createdAt])
+  @@index([status, maturedAt])
+  @@index([rakebackRecordId])
+}
+
+model ReferralMilestone {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  label       String
+  description String?  @db.Text
+  threshold   Decimal  @db.Decimal(14, 2)
+  metric      String // lifetime_rakeback | active_days | first_deposit
+  bonusAmount Decimal  @db.Decimal(14, 2)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  awards ReferralMilestoneAward[]
+}
+
+model ReferralMilestoneAward {
+  id          String            @id @default(cuid())
+  milestoneId String
+  milestone   ReferralMilestone @relation(fields: [milestoneId], references: [id], onDelete: Cascade)
+  referrerId  String
+  referrer    User              @relation("MilestoneReferrer", fields: [referrerId], references: [id], onDelete: Cascade)
+  referredId  String
+  referred    User              @relation("MilestoneReferred", fields: [referredId], references: [id], onDelete: Cascade)
+  awardedAt   DateTime          @default(now())
+  amount      Decimal           @db.Decimal(14, 2)
+  balanceTxId String?
+
+  @@unique([milestoneId, referrerId, referredId])
+  @@index([referrerId, awardedAt])
+}
+
+model ReferralFraudFlag {
+  id         String    @id @default(cuid())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reason     String
+  severity   String    @default("MEDIUM")
+  evidence   Json
+  status     String    @default("OPEN")
+  resolvedBy String?
+  resolvedAt DateTime?
+  notes      String?   @db.Text
+  createdAt  DateTime  @default(now())
+
+  @@unique([userId, reason, status])
+  @@index([userId, status])
+  @@index([status, createdAt])
+}
+
+model ReferralPolicy {
+  id                 String   @id @default("global")
+  defaultL1Percent   Decimal  @default(10.00) @db.Decimal(5, 2)
+  defaultL2Percent   Decimal  @default(2.00)  @db.Decimal(5, 2)
+  maxL1Percent       Decimal  @default(20.00) @db.Decimal(5, 2)
+  maxL2Percent       Decimal  @default(5.00)  @db.Decimal(5, 2)
+  holdDays           Int      @default(7)
+  leaderboardEnabled Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+  updatedBy          String?
 }

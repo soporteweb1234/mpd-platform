@@ -67,11 +67,24 @@ export default async function AdminReferralsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-mpd-white">Referidos</h1>
-        <p className="text-sm text-mpd-gray">
-          Programa de afiliación: comisiones por cadena de referidos.
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-bold text-mpd-white">Referidos</h1>
+          <p className="text-sm text-mpd-gray">
+            Programa de afiliación: comisiones por cadena de referidos.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/admin/referrals/attributions">Attributions</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/admin/referrals/fraud">Fraude</Link>
+          </Button>
+          <Button variant="outline" size="sm" asChild>
+            <Link href="/admin/referrals/milestones">Milestones</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
