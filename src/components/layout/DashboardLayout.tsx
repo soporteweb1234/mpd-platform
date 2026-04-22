@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { NAVIGATION } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { toNum } from "@/lib/money";
+import { GlobalSearchMount } from "@/components/shared/GlobalSearchMount";
 
 export async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -46,6 +47,7 @@ export async function DashboardLayout({ children }: { children: React.ReactNode 
           {children}
         </div>
       </main>
+      <GlobalSearchMount />
     </div>
   );
 }

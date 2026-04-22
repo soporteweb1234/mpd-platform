@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
 import { requireAdmin, AuthzError } from "@/lib/auth/guards";
+import { GlobalSearchMount } from "@/components/shared/GlobalSearchMount";
 
 export async function AdminLayout({ children }: { children: React.ReactNode }) {
   let session;
@@ -25,6 +26,7 @@ export async function AdminLayout({ children }: { children: React.ReactNode }) {
       <main className="lg:pl-64 min-h-screen transition-all duration-300">
         <div className="p-4 md:p-6 lg:p-8 pt-16 lg:pt-8">{children}</div>
       </main>
+      <GlobalSearchMount />
     </div>
   );
 }
