@@ -323,6 +323,108 @@ export async function createRoom(data: {
   if ("error" in authz) return authz;
 
   await prisma.pokerRoom.create({ data: data as any });
+  revalidatePath("/admin/rooms");
+  revalidatePath("/dashboard/rooms");
+  return { success: true };
+}
+
+/** CAMBIOS 21.3 — edición completa de una sala existente (FASE 4.A.6) */
+export type UpdateRoomInput = {
+  name: string;
+  slug: string;
+  affiliateCode: string;
+  rakebackBase: number;
+  rakebackPremium?: number | null;
+  logo?: string | null;
+  website?: string | null;
+  shortDescription?: string | null;
+  longDescription?: string | null;
+  description?: string | null;
+  setupGuide?: string | null;
+  registrationCode?: string | null;
+  master?: string | null;
+  dealCurrent?: number | null;
+  dealMax?: number | null;
+  rating?: number | null;
+  vpnRequired?: boolean;
+  vpnInstructions?: string | null;
+  requiresRenting?: boolean;
+  noKyc?: boolean;
+  status?: "ACTIVE" | "INACTIVE" | "SUSPENDED";
+  sortOrder?: number;
+};
+
+export async function updateRoom(roomId: string, input: UpdateRoomInput) {
+  const authz = await checkAdmin();
+  if ("error" in authz) return authz;
+  const { session } = authz;
+
+  if (!roomId) return { error: "Sala inválida" };
+  if (!input.name?.trim()) return { error: "Nombre requerido" };
+  if (!input.slug?.trim()) return { error: "Slug requerido" };
+  if (!input.affiliateCode?.trim()) return { error: "Código de afiliado requerido" };
+  if (typeof input.rakebackBase !== "number" || input.rakebackBase < 0 || input.rakebackBase > 100) {
+    return { error: "Rakeback base inválido (0–100)" };
+  }
+  if (input.rating != null && (input.rating < 1 || input.rating > 5)) {
+    return { error: "Rating debe estar entre 1 y 5" };
+  }
+
+  const before = await prisma.pokerRoom.findUnique({
+    where: { id: roomId },
+    select: { id: true, rakebackBase: true, status: true, dealCurrent: true },
+  });
+  if (!before) return { error: "Sala no encontrada" };
+
+  await prisma.$transaction([
+    prisma.pokerRoom.update({
+      where: { id: roomId },
+      data: {
+        name: input.name.trim(),
+        slug: input.slug.trim(),
+        affiliateCode: input.affiliateCode.trim(),
+        rakebackBase: input.rakebackBase,
+        rakebackPremium: input.rakebackPremium ?? null,
+        logo: input.logo?.trim() || null,
+        website: input.website?.trim() || null,
+        shortDescription: input.shortDescription?.trim() || null,
+        longDescription: input.longDescription?.trim() || null,
+        description: input.description?.trim() || null,
+        setupGuide: input.setupGuide?.trim() || null,
+        registrationCode: input.registrationCode?.trim() || null,
+        master: input.master?.trim() || null,
+        dealCurrent: input.dealCurrent ?? null,
+        dealMax: input.dealMax ?? null,
+        rating: input.rating ?? null,
+        vpnRequired: input.vpnRequired ?? false,
+        vpnInstructions: input.vpnInstructions?.trim() || null,
+        requiresRenting: input.requiresRenting ?? false,
+        noKyc: input.noKyc ?? false,
+        status: input.status ?? undefined,
+        sortOrder: input.sortOrder ?? undefined,
+      },
+    }),
+    prisma.activityLog.create({
+      data: {
+        userId: session.user.id,
+        action: "ROOM_UPDATED",
+        entityType: "pokerRoom",
+        entityId: roomId,
+        details: {
+          rakebackBaseBefore: before.rakebackBase,
+          rakebackBaseAfter: input.rakebackBase,
+          statusBefore: before.status,
+          statusAfter: input.status ?? before.status,
+          dealBefore: before.dealCurrent,
+          dealAfter: input.dealCurrent ?? null,
+        },
+      },
+    }),
+  ]);
+
+  revalidatePath("/admin/rooms");
+  revalidatePath(`/admin/rooms/${roomId}`);
+  revalidatePath("/dashboard/rooms");
   return { success: true };
 }
 
