@@ -93,13 +93,24 @@ export function Sidebar({ items, user, type }: SidebarProps) {
           )}
         >
           {!collapsed ? (
-            <Link href={type === "admin" ? "/admin" : "/dashboard"} className="flex items-center gap-2 min-w-0">
-              <Logo size="sm" inverted />
-              {type === "admin" && (
-                <Badge variant="outline" className="text-[10px] border-mpd-black/40 text-mpd-black">
-                  Admin
-                </Badge>
-              )}
+            <Link
+              href={type === "admin" ? "/admin" : "/dashboard"}
+              className="flex items-center gap-2 min-w-0 flex-1 mr-2"
+            >
+              <Logo size="sm" inverted showText={false} />
+              <div className="flex flex-col items-start min-w-0 leading-tight">
+                <span className="font-display font-semibold uppercase text-sm tracking-[0.08em] text-mpd-black truncate w-full">
+                  Manager Poker Deal
+                </span>
+                {type === "admin" && (
+                  <Badge
+                    variant="outline"
+                    className="mt-0.5 h-4 px-1.5 text-[9px] uppercase tracking-wider border-mpd-black/40 text-mpd-black"
+                  >
+                    Admin
+                  </Badge>
+                )}
+              </div>
             </Link>
           ) : (
             <Link href={type === "admin" ? "/admin" : "/dashboard"} aria-label="MPD">
