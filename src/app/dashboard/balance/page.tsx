@@ -3,10 +3,12 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { formatUSD, formatDateTime } from "@/lib/utils";
 import { toNum } from "@/lib/money";
-import { Wallet, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
+import { BalanceAvailableCard } from "@/components/dashboard/BalanceAvailableCard";
 import Link from "next/link";
 
 export const metadata = { title: "Saldo Interno" };
@@ -24,20 +26,58 @@ const typeLabels: Record<string, string> = {
   POINTS_REWARD: "Recompensa puntos",
 };
 
+const withdrawalStatusConfig: Record<
+  string,
+  { label: string; variant: "success" | "destructive" | "warning" | "secondary" }
+> = {
+  PENDING: { label: "En proceso", variant: "warning" },
+  PAID: { label: "Paid", variant: "success" },
+  REJECTED: { label: "Rejected", variant: "destructive" },
+  EXPIRED: { label: "Expired", variant: "destructive" },
+};
+
+function truncateAddress(addr: string): string {
+  if (addr.length <= 16) return addr;
+  return `${addr.slice(0, 8)}…${addr.slice(-6)}`;
+}
+
+function formatWithdrawalDate(d: Date | null | undefined): string {
+  if (!d) return "—";
+  return d.toLocaleDateString("es-ES", {
+    day: "2-digit",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
 export default async function BalancePage() {
   const session = await auth();
   if (!session?.user) redirect("/login");
 
-  const user = await prisma.user.findUnique({
-    where: { id: session.user.id },
-    select: { availableBalance: true, pendingBalance: true, lifetimeEarnings: true },
-  });
+  const threeMonthsAgo = new Date();
+  threeMonthsAgo.setMonth(threeMonthsAgo.getMonth() - 3);
 
-  const transactions = await prisma.balanceTransaction.findMany({
-    where: { userId: session.user.id },
-    orderBy: { createdAt: "desc" },
-    take: 50,
-  });
+  const [user, transactions, withdrawals] = await Promise.all([
+    prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { availableBalance: true, pendingBalance: true, lifetimeEarnings: true },
+    }),
+    prisma.balanceTransaction.findMany({
+      where: { userId: session.user.id },
+      orderBy: { createdAt: "desc" },
+      take: 50,
+    }),
+    prisma.withdrawalRequest.findMany({
+      where: {
+        userId: session.user.id,
+        createdAt: { gte: threeMonthsAgo },
+      },
+      orderBy: { createdAt: "desc" },
+    }),
+  ]);
+
+  const availableBalance = toNum(user?.availableBalance);
 
   return (
     <div className="space-y-6">
@@ -49,26 +89,97 @@ export default async function BalancePage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card className="border-mpd-green/30">
-          <CardContent className="p-5">
-            <p className="text-xs text-mpd-gray uppercase tracking-wider mb-1">Saldo Disponible</p>
-            <p className="text-3xl font-bold font-mono text-mpd-green">{formatCurrency(toNum(user?.availableBalance))}</p>
-          </CardContent>
-        </Card>
+        <BalanceAvailableCard availableBalance={availableBalance} />
         <Card className="border-mpd-amber/30">
           <CardContent className="p-5">
             <p className="text-xs text-mpd-gray uppercase tracking-wider mb-1">Saldo Pendiente</p>
-            <p className="text-3xl font-bold font-mono text-mpd-amber">{formatCurrency(toNum(user?.pendingBalance))}</p>
+            <p className="text-3xl font-bold font-mono text-mpd-amber">{formatUSD(toNum(user?.pendingBalance))}</p>
             <p className="text-[10px] text-mpd-gray-dark mt-1">Se liquida en la próxima quincena</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-5">
             <p className="text-xs text-mpd-gray uppercase tracking-wider mb-1">Total Histórico</p>
-            <p className="text-3xl font-bold font-mono text-mpd-white">{formatCurrency(toNum(user?.lifetimeEarnings))}</p>
+            <p className="text-3xl font-bold font-mono text-mpd-white">{formatUSD(toNum(user?.lifetimeEarnings))}</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Historial de retiros — últimos 3 meses */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Historial de retiros</CardTitle>
+          <p className="text-xs text-mpd-gray-dark mt-0.5">Últimos 3 meses</p>
+        </CardHeader>
+        <CardContent>
+          {withdrawals.length > 0 ? (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-mpd-border">
+                    <th className="text-left py-3 px-2 text-mpd-gray font-medium">Status</th>
+                    <th className="text-left py-3 px-2 text-mpd-gray font-medium">Cashout Date</th>
+                    <th className="text-left py-3 px-2 text-mpd-gray font-medium">Date Paid</th>
+                    <th className="text-left py-3 px-2 text-mpd-gray font-medium">Method</th>
+                    <th className="text-left py-3 px-2 text-mpd-gray font-medium">Currency</th>
+                    <th className="text-left py-3 px-2 text-mpd-gray font-medium">Payment Details</th>
+                    <th className="text-right py-3 px-2 text-mpd-gray font-medium">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {withdrawals.map((w) => {
+                    const cfg = withdrawalStatusConfig[w.status] ?? {
+                      label: w.status,
+                      variant: "secondary" as const,
+                    };
+                    const showAmount = w.status === "PAID" ? toNum(w.amountUsd) : 0;
+                    return (
+                      <tr
+                        key={w.id}
+                        className="border-b border-mpd-border/50 hover:bg-mpd-surface-hover/50"
+                      >
+                        <td className="py-3 px-2">
+                          <Badge variant={cfg.variant}>{cfg.label}</Badge>
+                        </td>
+                        <td className="py-3 px-2 text-mpd-white font-mono text-xs">
+                          {formatWithdrawalDate(w.createdAt)}
+                        </td>
+                        <td className="py-3 px-2 text-mpd-gray font-mono text-xs">
+                          {w.status === "PAID"
+                            ? formatWithdrawalDate(w.processedAt)
+                            : "—"}
+                        </td>
+                        <td className="py-3 px-2 text-mpd-white">
+                          Tether {w.network.toLowerCase()}
+                        </td>
+                        <td className="py-3 px-2 text-mpd-white">USDT</td>
+                        <td
+                          className="py-3 px-2 font-mono text-xs text-mpd-gray"
+                          title={w.toAddress}
+                        >
+                          {truncateAddress(w.toAddress)}
+                        </td>
+                        <td className="py-3 px-2 text-right font-mono text-mpd-white">
+                          {w.status === "PAID"
+                            ? `₮${showAmount.toFixed(2)}`
+                            : w.status === "PENDING"
+                              ? `₮${toNum(w.amountUsd).toFixed(2)}`
+                              : "0"}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          ) : (
+            <EmptyState
+              title="Sin retiros"
+              description="Tu historial de retiros USDT aparecerá aquí."
+            />
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -97,9 +208,9 @@ export default async function BalancePage() {
                   </div>
                   <div className="text-right">
                     <p className={`text-sm font-mono font-medium ${tx.amount >= 0 ? "text-mpd-green" : "text-mpd-red"}`}>
-                      {tx.amount >= 0 ? "+" : ""}{formatCurrency(tx.amount)}
+                      {tx.amount >= 0 ? "+" : ""}{formatUSD(tx.amount)}
                     </p>
-                    <p className="text-xs text-mpd-gray-dark font-mono">{formatCurrency(tx.balanceAfter)}</p>
+                    <p className="text-xs text-mpd-gray-dark font-mono">{formatUSD(tx.balanceAfter)}</p>
                   </div>
                 </div>
               ))}
