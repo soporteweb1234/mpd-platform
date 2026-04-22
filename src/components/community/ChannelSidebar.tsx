@@ -74,11 +74,11 @@ export function ChannelSidebar({ channels, selectedChannelId, onSelectChannel, c
   };
 
   return (
-    <div className="w-[250px] h-full bg-[#0D1117] flex flex-col border-r border-[#30363D]">
+    <div className="w-[250px] h-full bg-[var(--mpd-black)] flex flex-col border-r border-[var(--mpd-border)]">
       {/* Header */}
-      <div className="h-12 px-4 flex items-center border-b border-[#30363D]">
-        <Shield className="h-5 w-5 text-[#C9A84C] mr-2" />
-        <h2 className="font-semibold text-[#E6EDF3] text-sm">Comunidad MPD</h2>
+      <div className="h-12 px-4 flex items-center border-b border-[var(--mpd-border)]">
+        <Shield className="h-5 w-5 text-[var(--mpd-gold)] mr-2" />
+        <h2 className="font-semibold text-[var(--mpd-white)] text-sm">Comunidad MPD</h2>
       </div>
 
       {/* Channels list */}
@@ -93,7 +93,7 @@ export function ChannelSidebar({ channels, selectedChannelId, onSelectChannel, c
             <div key={cat} className="mb-1">
               <button
                 onClick={() => toggleCategory(cat)}
-                className="flex items-center w-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[#8B949E] hover:text-[#E6EDF3] transition-colors"
+                className="flex items-center w-full px-3 py-1.5 text-[10px] font-semibold uppercase tracking-wider text-[var(--mpd-gray)] hover:text-[var(--mpd-white)] transition-colors"
               >
                 {isCollapsed ? (
                   <ChevronRight className="h-3 w-3 mr-1" />
@@ -124,21 +124,21 @@ export function ChannelSidebar({ channels, selectedChannelId, onSelectChannel, c
                       className={cn(
                         "flex items-center w-full px-2 py-1 mx-1 rounded text-sm transition-colors group",
                         isSelected
-                          ? "bg-[#1C2128] text-[#E6EDF3] border-l-2 border-[#C9A84C]"
+                          ? "bg-[var(--mpd-surface)] text-[var(--mpd-white)] border-l-2 border-[var(--mpd-gold)]"
                           : locked
-                          ? "text-[#656D76] cursor-not-allowed"
-                          : "text-[#8B949E] hover:text-[#E6EDF3] hover:bg-[#161B22]"
+                          ? "text-[var(--mpd-gray)] cursor-not-allowed"
+                          : "text-[var(--mpd-gray)] hover:text-[var(--mpd-white)] hover:bg-[var(--mpd-surface)]"
                       )}
                       style={{ width: "calc(100% - 8px)" }}
                     >
                       {locked ? (
                         <Lock className="h-3.5 w-3.5 mr-1.5 shrink-0" />
                       ) : (
-                        <Hash className="h-3.5 w-3.5 mr-1.5 shrink-0 text-[#656D76]" />
+                        <Hash className="h-3.5 w-3.5 mr-1.5 shrink-0 text-[var(--mpd-gray)]" />
                       )}
                       <span className="truncate flex-1 text-left">{channel.name}</span>
                       {unread > 0 && !locked && (
-                        <span className="ml-auto bg-[#C9A84C] text-[#0D1117] text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
+                        <span className="ml-auto bg-[var(--mpd-gold)] text-[var(--mpd-black)] text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1">
                           {unread > 99 ? "99+" : unread}
                         </span>
                       )}
@@ -151,23 +151,23 @@ export function ChannelSidebar({ channels, selectedChannelId, onSelectChannel, c
       </div>
 
       {/* Current user info */}
-      <div className="p-3 border-t border-[#30363D]">
+      <div className="p-3 border-t border-[var(--mpd-border)]">
         <div className="flex items-center gap-2">
           <div className="relative">
-            <div className="w-8 h-8 rounded-full bg-[#161B22] flex items-center justify-center text-xs font-semibold text-[#E6EDF3]">
+            <div className="w-8 h-8 rounded-full bg-[var(--mpd-surface)] flex items-center justify-center text-xs font-semibold text-[var(--mpd-white)]">
               {currentUser.name
                 .split(" ")
                 .map((n) => n[0])
                 .join("")
                 .slice(0, 2)}
             </div>
-            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#00C875] rounded-full border-2 border-[#0D1117]" />
+            <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[var(--mpd-green)] rounded-full border-2 border-[var(--mpd-black)]" />
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-[#E6EDF3] truncate">
+            <p className="text-xs font-medium text-[var(--mpd-white)] truncate">
               {currentUser.nickname ?? currentUser.name}
             </p>
-            <p className="text-[10px] text-[#8B949E]">
+            <p className="text-[10px] text-[var(--mpd-gray)]">
               {STRATUM_LABELS[currentUser.stratum]}
             </p>
           </div>

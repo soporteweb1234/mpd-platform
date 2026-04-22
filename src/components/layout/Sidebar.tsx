@@ -103,8 +103,8 @@ export function Sidebar({ items, user, type }: SidebarProps) {
             </Link>
           ) : (
             <Link href={type === "admin" ? "/admin" : "/dashboard"} aria-label="MPD">
-              <div className="h-8 w-8 rounded-md bg-mpd-black/10 flex items-center justify-center text-mpd-black font-bold text-sm">
-                M
+              <div className="h-8 w-8 rounded-md bg-mpd-black/10 flex items-center justify-center text-mpd-black font-bold text-xs tracking-tight">
+                MPD
               </div>
             </Link>
           )}

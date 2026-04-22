@@ -8,9 +8,9 @@ type LogoProps = {
 };
 
 const sizes = {
-  sm: { flame: "h-6 w-6", text: "text-sm tracking-[0.18em]" },
-  md: { flame: "h-8 w-8", text: "text-base tracking-[0.22em]" },
-  lg: { flame: "h-12 w-12", text: "text-xl tracking-[0.24em]" },
+  sm: { flame: "h-6 w-6", text: "text-sm tracking-[0.08em]" },
+  md: { flame: "h-8 w-8", text: "text-base tracking-[0.12em]" },
+  lg: { flame: "h-12 w-12", text: "text-xl tracking-[0.16em]" },
 };
 
 export function Logo({ className, showText = true, size = "md", inverted = false }: LogoProps) {
@@ -54,12 +54,12 @@ export function Logo({ className, showText = true, size = "md", inverted = false
       {showText && (
         <span
           className={cn(
-            "font-body font-semibold uppercase whitespace-nowrap",
+            "font-display font-semibold uppercase whitespace-nowrap",
             inverted ? "text-mpd-black" : "text-mpd-white",
             s.text
           )}
         >
-          Manager Poker Deals
+          Manager Poker Deal
         </span>
       )}
     </div>
