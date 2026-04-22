@@ -12,6 +12,7 @@ import {
   type RakebackLoadInput,
   type BalanceAdjustInput,
 } from "@/lib/validations";
+import { reindexArticle } from "@/lib/ai/reindex";
 
 export async function loadRakeback(input: RakebackLoadInput) {
   const authz = await checkAdmin();
@@ -834,9 +835,19 @@ export async function createKnowledgeArticle(data: {
     return article;
   });
 
+  let indexWarning: string | undefined;
+  try {
+    await reindexArticle(created.id);
+  } catch (err) {
+    indexWarning =
+      "Artículo guardado, pero el re-indexado RAG falló. Revisa OPENAI_API_KEY y usa 'Re-indexar todo' desde /admin/bot.";
+    console.error("[fase5] reindex on create failed:", err);
+  }
+
   revalidatePath("/admin/knowledge");
   revalidatePath("/dashboard/knowledge");
-  return { success: true, id: created.id };
+  revalidatePath("/dashboard/chat");
+  return { success: true, id: created.id, ...(indexWarning ? { warning: indexWarning } : {}) };
 }
 
 export async function updateKnowledgeArticle(id: string, data: {
@@ -874,10 +885,23 @@ export async function updateKnowledgeArticle(id: string, data: {
     }),
   ]);
 
+  let indexWarning: string | undefined;
+  // Reindex sólo si cambió title o content (reglas: otros campos no afectan al corpus RAG)
+  if (data.title !== undefined || data.content !== undefined) {
+    try {
+      await reindexArticle(id);
+    } catch (err) {
+      indexWarning =
+        "Artículo guardado, pero el re-indexado RAG falló. Revisa OPENAI_API_KEY y usa 'Re-indexar todo' desde /admin/bot.";
+      console.error("[fase5] reindex on update failed:", err);
+    }
+  }
+
   revalidatePath("/admin/knowledge");
   revalidatePath(`/admin/knowledge/${id}`);
   revalidatePath("/dashboard/knowledge");
-  return { success: true };
+  revalidatePath("/dashboard/chat");
+  return { success: true, ...(indexWarning ? { warning: indexWarning } : {}) };
 }
 
 export async function fulfillOrder(orderId: string) {
