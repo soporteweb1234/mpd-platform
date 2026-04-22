@@ -189,4 +189,24 @@ src/
 - La calculadora de rakeback es el principal lead magnet — debe ser interactiva e inmediata
 - Discord es el canal de entrada a la comunidad — todos los CTAs llevan a registro o Discord
 - El fundador NO aparece públicamente — todo es marca "Manager Poker Deal"
+
+## Errores conocidos — NO repetir
+
+### [2026-04-22] 13 páginas 404 por NAVIGATION + botones sin `page.tsx`
+- **Qué pasó:** el sidebar (`src/lib/constants.ts::NAVIGATION`) y varios `<Link href>` en listings apuntaban a rutas sin `src/app/<ruta>/page.tsx`. Next.js App Router es 100% filesystem-based y devuelve 404 al instante si el fichero no existe. El build de Vercel pasa verde aunque los hrefs estén muertos.
+- **Fix:** commit `528689b` — crear 13 pages stubs funcionales usando server actions existentes (`createRoom`, `createService`, `createKnowledgeArticle`, `loadRakeback`, `updateUserBalances`, `sendTicketMessage`). Quitar `disabled:true` de items de sidebar que ya existen.
+- **Regla:** SIEMPRE que añadas un item a `NAVIGATION.*` o un `<Link href>`, crea la `page.tsx` correspondiente en la misma PR. Verificar en prod con `curl -s -o /dev/null -w "%{http_code}" URL` — auth redirect = `302` (OK), `404` = falta page.
+- **Ver también:** [[Knowledge/Errors/nextjs-orphan-nav-404]] (cross-project).
+
+### [2026-04-22] Vercel CLI token scoping bug post-breach
+- **Qué pasó:** tras rotación de token 2026-04-21, el CLI `vercel` rechazaba el token con "cannot set Personal Account as scope". `whoami` OK pero `teams ls`, `link`, `projects` fallaban.
+- **Fix:** usar REST API directa (`POST /v10/projects/{id}/env`, `POST /v13/deployments?forceNew=1`) con `team_ndudzZEvrwLBpa5MjJIIZmlD` como teamId explícito. No confiar en el CLI para operaciones scopeadas.
+
+### [2026-04-22] `prisma.update` con WHERE no-unique falla
+- **Qué pasó:** `prisma.paymentIntent.update({ where: { id, creditedAt: null }, ... })` → error typecheck. Prisma `update` solo acepta UNIQUE en where.
+- **Fix:** usar `updateMany({ where: { id, creditedAt: null }, data: {...} })` y chequear `result.count === 1` para idempotencia exactly-once.
+
+### [2026-04-22] `navigator.clipboard` narrowing a `never` en strict TS
+- **Qué pasó:** `navigator as Navigator & { share: ... }` — el cast no propaga y TS infiere `never` para `clipboard`.
+- **Fix:** usar `window.navigator as unknown as { share?: ...; clipboard?: ... }` para hacer double-cast explícito.
 - Target: jugadores hispanohablantes de poker online, principalmente España y Latinoamérica
