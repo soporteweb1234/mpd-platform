@@ -68,6 +68,22 @@ enum TransactionType {
   WITHDRAWAL
   BONUS
   POINTS_REWARD
+  DEPOSIT_USDT
+}
+
+enum PaymentProvider {
+  NOWPAYMENTS
+  MANUAL
+}
+
+enum PaymentIntentStatus {
+  WAITING
+  CONFIRMING
+  CONFIRMED
+  FINISHED
+  FAILED
+  REFUNDED
+  EXPIRED
 }
 
 enum ServiceCategory {
@@ -244,6 +260,8 @@ model User {
   referralCommissionsAsReferred ReferralCommission[] @relation("ReferralCommissionReferred")
   bankingCandidate              BankingCandidate?
   calendarEventsCreated         CalendarEvent[]
+  paymentIntents                PaymentIntent[]
+  discordRoleSyncLogs           DiscordRoleSyncLog[]
 
   @@index([email])
   @@index([role])
@@ -930,4 +948,76 @@ model CalendarEvent {
   @@index([startAt])
   @@index([visibility, startAt])
   @@index([createdBy])
+}
+
+// ============================================
+// PAYMENT INTENTS (USDT deposits via NOWPayments) — FASE 8
+// ============================================
+
+model PaymentIntent {
+  id              String @id @default(cuid())
+  userId          String
+  user            User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  provider        PaymentProvider     @default(NOWPAYMENTS)
+  providerOrderId String              @unique
+  amountUsd       Decimal             @db.Decimal(12, 2)
+  network         String              // TRC20 | BEP20 | ERC20
+  payCurrency     String              // usdttrc20 | usdtbep20 | usdterc20
+  payAddress      String?
+  payAmount       Decimal?            @db.Decimal(24, 8)
+  status          PaymentIntentStatus @default(WAITING)
+  creditedAt      DateTime?
+  txHash          String?
+  notes           String?
+  expiresAt       DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  webhookEvents PaymentWebhookEvent[]
+
+  @@index([userId, createdAt])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model PaymentWebhookEvent {
+  id        String @id @default(cuid())
+  intentId  String
+  intent    PaymentIntent @relation(fields: [intentId], references: [id], onDelete: Cascade)
+
+  eventHash   String   @unique
+  payload     Json
+  receivedAt  DateTime @default(now())
+  processed   Boolean  @default(false)
+  processedAt DateTime?
+  error       String?
+
+  @@index([intentId, receivedAt])
+}
+
+// ============================================
+// DISCORD ROLE SYNC LOG — FASE 8
+// ============================================
+
+model DiscordRoleSyncLog {
+  id        String @id @default(cuid())
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  discordId     String
+  fromStratum   PlayerStratum?
+  toStratum     PlayerStratum
+  addedRoleId   String?
+  removedRoleId String?
+  source        String  // stratum_change | cron_reconcile | manual
+  success       Boolean
+  error         String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([createdAt])
+  @@index([success, createdAt])
 }

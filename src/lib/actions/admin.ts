@@ -320,7 +320,7 @@ export async function updateUserStratum(userId: string, stratum: string) {
 
   const before = await prisma.user.findUnique({
     where: { id: userId },
-    select: { stratum: true },
+    select: { stratum: true, discordId: true, discordConnected: true },
   });
   if (!before) return { error: "Usuario no encontrado" };
 
@@ -339,6 +339,21 @@ export async function updateUserStratum(userId: string, stratum: string) {
       },
     }),
   ]);
+
+  if (before.discordId && before.discordConnected && before.stratum !== (stratum as any)) {
+    try {
+      const { syncDiscordRole } = await import("@/lib/discord/roles");
+      await syncDiscordRole({
+        userId,
+        discordId: before.discordId,
+        fromStratum: before.stratum,
+        toStratum: stratum as any,
+        source: "stratum_change",
+      });
+    } catch (err) {
+      console.warn("[fase8] Discord role sync failed", err);
+    }
+  }
 
   revalidatePath("/admin/users");
   revalidatePath(`/admin/users/${userId}`);

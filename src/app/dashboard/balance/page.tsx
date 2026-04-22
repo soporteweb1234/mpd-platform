@@ -81,11 +81,16 @@ export default async function BalancePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between flex-wrap gap-2">
         <h1 className="text-2xl font-bold text-mpd-white">Saldo Interno</h1>
-        <Button asChild>
-          <Link href="/dashboard/services">Canjear por servicios</Link>
-        </Button>
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/dashboard/balance/deposit">Depositar USDT</Link>
+          </Button>
+          <Button asChild>
+            <Link href="/dashboard/services">Canjear por servicios</Link>
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">

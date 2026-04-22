@@ -78,6 +78,7 @@ export const NAVIGATION = {
     { label: "Usuarios", href: "/admin/users", icon: "Users" },
     { label: "Rakeback", href: "/admin/rakeback", icon: "TrendingUp" },
     { label: "MPD Staking", href: "/admin/staking", icon: "Landmark" },
+    { label: "Pagos USDT", href: "/admin/payments", icon: "Wallet" },
     { label: "Salas", href: "/admin/rooms", icon: "Building2" },
     { label: "Servicios", href: "/admin/services", icon: "ShoppingBag" },
     { label: "Cursos", href: "/admin/cursos", icon: "GraduationCap" },
