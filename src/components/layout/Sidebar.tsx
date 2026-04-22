@@ -3,10 +3,10 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { cn, formatCurrency, getStratumLabel } from "@/lib/utils";
+import { cn, formatCurrency, getStatusGalon } from "@/lib/utils";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/shared/Logo";
 import {
   LayoutDashboard, TrendingUp, Wallet, Building2, Users, ShoppingBag,
   GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, MessagesSquare, Settings,
@@ -18,7 +18,7 @@ import { logoutUser } from "@/lib/actions/auth";
 const iconMap: Record<string, React.ElementType> = {
   LayoutDashboard, TrendingUp, Wallet, Building2, Users, ShoppingBag,
   GraduationCap, Trophy, Medal, LifeBuoy, MessageSquare, MessagesSquare, Settings,
-  GitBranch, BookOpen, Bell, Bot, Activity, Landmark, Radio,
+  GitBranch, BookOpen, Bell, Bot, Activity, Landmark, Radio, Shield,
 };
 
 interface NavItem {
@@ -33,6 +33,9 @@ interface SidebarProps {
     name: string;
     avatar?: string | null;
     stratum?: string;
+    statusLevel?: string;
+    prestigeScore?: number;
+    reputationScore?: number;
     availableBalance?: number;
     role?: string;
   };
@@ -50,6 +53,8 @@ export function Sidebar({ items, user, type }: SidebarProps) {
     .join("")
     .toUpperCase()
     .slice(0, 2);
+
+  const galon = user.statusLevel ? getStatusGalon(user.statusLevel) : null;
 
   return (
     <>
@@ -78,35 +83,42 @@ export function Sidebar({ items, user, type }: SidebarProps) {
           mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
         )}
       >
-        {/* Header */}
-        <div className={cn("flex items-center h-16 px-4 border-b border-mpd-border", collapsed ? "justify-center" : "justify-between")}>
-          {!collapsed && (
-            <Link href={type === "admin" ? "/admin" : "/dashboard"} className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-mpd-gold flex items-center justify-center text-mpd-black font-bold text-sm">
+        {/* Header — cuadro amarillo con logo MPD */}
+        <div
+          className={cn(
+            "relative flex items-center border-b border-mpd-border bg-mpd-gold",
+            collapsed ? "h-16 justify-center px-2" : "h-20 justify-between px-4"
+          )}
+        >
+          {!collapsed ? (
+            <Link href={type === "admin" ? "/admin" : "/dashboard"} className="flex items-center gap-2 min-w-0">
+              <Logo size="sm" inverted />
+              {type === "admin" && (
+                <Badge variant="outline" className="text-[10px] border-mpd-black/40 text-mpd-black">
+                  Admin
+                </Badge>
+              )}
+            </Link>
+          ) : (
+            <Link href={type === "admin" ? "/admin" : "/dashboard"} aria-label="MPD">
+              <div className="h-8 w-8 rounded-md bg-mpd-black/10 flex items-center justify-center text-mpd-black font-bold text-sm">
                 M
               </div>
-              <span className="font-semibold text-mpd-white">MPD</span>
-              {type === "admin" && <Badge variant="warning" className="text-[10px]">Admin</Badge>}
             </Link>
-          )}
-          {collapsed && (
-            <div className="h-8 w-8 rounded-lg bg-mpd-gold flex items-center justify-center text-mpd-black font-bold text-sm">
-              M
-            </div>
           )}
           <button
             onClick={() => {
               setCollapsed(!collapsed);
               setMobileOpen(false);
             }}
-            className="hidden lg:flex p-1 rounded text-mpd-gray hover:text-mpd-white"
+            className="hidden lg:flex p-1 rounded text-mpd-black/70 hover:text-mpd-black"
             aria-label={collapsed ? "Expandir sidebar" : "Colapsar sidebar"}
           >
             {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
           <button
             onClick={() => setMobileOpen(false)}
-            className="lg:hidden p-1 rounded text-mpd-gray hover:text-mpd-white"
+            className="lg:hidden p-1 rounded text-mpd-black/70 hover:text-mpd-black"
             aria-label="Cerrar menú"
           >
             <X className="h-4 w-4" />
@@ -123,10 +135,10 @@ export function Sidebar({ items, user, type }: SidebarProps) {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-mpd-white truncate">{user.name}</p>
-                {user.stratum && (
-                  <Badge variant="outline" className="text-[10px] mt-0.5">
-                    {getStratumLabel(user.stratum)}
-                  </Badge>
+                {galon && (
+                  <p className={cn("text-[11px] mt-0.5 truncate", galon.color)}>
+                    Galón — {galon.tier} / Nivel {galon.nivel}
+                  </p>
                 )}
               </div>
             </div>
@@ -180,19 +192,6 @@ export function Sidebar({ items, user, type }: SidebarProps) {
             >
               <Shield className="h-4 w-4 shrink-0" />
               {!collapsed && <span>Panel Admin</span>}
-            </Link>
-          )}
-          {type === "dashboard" && (
-            <Link
-              href="/dashboard/settings"
-              onClick={() => setMobileOpen(false)}
-              className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-mpd-gray hover:text-mpd-white hover:bg-mpd-surface-hover transition-colors mb-1",
-                collapsed && "justify-center px-2"
-              )}
-            >
-              <Settings className="h-4 w-4 shrink-0" />
-              {!collapsed && <span>Configuración</span>}
             </Link>
           )}
           <form action={logoutUser}>

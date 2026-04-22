@@ -27,6 +27,14 @@ enum PlayerStratum {
   REFERENTE
 }
 
+enum StatusLevel {
+  APRENDIZ
+  VERSADO
+  PROFESIONAL
+  EXPERTO
+  MAESTRO
+}
+
 enum UserStatus {
   PENDING
   ACTIVE
@@ -169,6 +177,9 @@ model User {
   // Gamification
   points             Int             @default(0)
   level              Int             @default(1)
+  statusLevel        StatusLevel     @default(APRENDIZ)
+  prestigeScore      Int             @default(0)
+  reputationScore    Int             @default(0)
 
   // Referrals
   referredById       String?
@@ -251,6 +262,10 @@ model RoomAffiliation {
   room           PokerRoom @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   playerRoomId   String?
+  nickname       String?
+  roomEmail      String?
+  referralCodeAtRoom String?
+  codeId         String?
   affiliatedAt   DateTime  @default(now())
   verified       Boolean   @default(false)
   verifiedAt     DateTime?

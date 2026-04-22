@@ -47,7 +47,9 @@ export default async function RoomsPage() {
                       </div>
                       <div>
                         <h3 className="font-medium text-mpd-white">{aff.room.name}</h3>
-                        <p className="text-xs text-mpd-gray">Rakeback: {aff.room.rakebackBase}%</p>
+                        {aff.nickname && (
+                          <p className="text-xs text-mpd-gray">Alias: {aff.nickname}</p>
+                        )}
                       </div>
                     </div>
                     {aff.isPrimary && <Badge variant="default">Principal</Badge>}
@@ -88,7 +90,7 @@ export default async function RoomsPage() {
                     </div>
                     <div>
                       <h3 className="font-medium text-mpd-white">{room.name}</h3>
-                      <p className="text-xs text-mpd-gray">Rakeback base: {room.rakebackBase}%</p>
+                      <p className="text-xs text-mpd-gray">Condiciones a consultar</p>
                     </div>
                   </div>
                   {room.description && (

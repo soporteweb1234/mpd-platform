@@ -5,10 +5,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
-  Building2, CheckCircle2, Clock, MessageCircle, Send,
+  Building2, CheckCircle2, MessageCircle, Send,
   UserPlus, CreditCard, BarChart3, ArrowLeft, ExternalLink, Shield
 } from "lucide-react";
 import Link from "next/link";
+import { AffiliationEditForm } from "@/components/dashboard/AffiliationEditForm";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -92,7 +93,9 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ slu
               </div>
               <div>
                 <h1 className="text-xl font-bold text-mpd-white">{room.name}</h1>
-                <p className="text-sm text-mpd-gray">Rakeback base: {room.rakebackBase}%</p>
+                <p className="text-sm text-mpd-gray">
+                  Condiciones personalizadas gestionadas por MPD
+                </p>
               </div>
             </div>
             <div className="flex flex-col items-end gap-1 shrink-0">
@@ -208,22 +211,34 @@ export default async function RoomDetailPage({ params }: { params: Promise<{ slu
       )}
 
       {/* Already affiliated state */}
-      {isAffiliated && (
-        <Card className="border-mpd-green/20 bg-mpd-green/5">
-          <CardContent className="p-5 flex items-center gap-3">
-            <CheckCircle2 className="h-5 w-5 text-mpd-green shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-mpd-white">
-                {affiliation?.verified ? "Afiliación verificada" : "Solicitud en proceso"}
-              </p>
-              <p className="text-xs text-mpd-gray">
-                {affiliation?.verified
-                  ? "Tu cuenta en esta sala está vinculada con MPD. El rakeback se carga mensualmente."
-                  : "Estamos verificando tu afiliación. Te notificaremos cuando esté activa."}
-              </p>
-            </div>
-          </CardContent>
-        </Card>
+      {isAffiliated && affiliation && (
+        <>
+          <Card className="border-mpd-green/20 bg-mpd-green/5">
+            <CardContent className="p-5 flex items-center gap-3">
+              <CheckCircle2 className="h-5 w-5 text-mpd-green shrink-0" />
+              <div>
+                <p className="text-sm font-medium text-mpd-white">
+                  {affiliation.verified ? "Afiliación verificada" : "Solicitud en proceso"}
+                </p>
+                <p className="text-xs text-mpd-gray">
+                  {affiliation.verified
+                    ? "Tu cuenta en esta sala está vinculada con MPD. El rakeback se carga mensualmente."
+                    : "Estamos verificando tu afiliación. Te notificaremos cuando esté activa."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
+          <AffiliationEditForm
+            affiliationId={affiliation.id}
+            defaults={{
+              nickname: affiliation.nickname,
+              roomEmail: affiliation.roomEmail,
+              referralCodeAtRoom: affiliation.referralCodeAtRoom,
+              codeId: affiliation.codeId,
+            }}
+          />
+        </>
       )}
     </div>
   );

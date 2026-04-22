@@ -60,6 +60,28 @@ export function getStratumLabel(stratum: string): string {
   return labels[stratum] ?? stratum;
 }
 
+export function getStatusLevelLabel(level: string): string {
+  const labels: Record<string, string> = {
+    APRENDIZ: "Aprendiz",
+    VERSADO: "Versado",
+    PROFESIONAL: "Profesional",
+    EXPERTO: "Experto",
+    MAESTRO: "Maestro",
+  };
+  return labels[level] ?? level;
+}
+
+export function getStatusGalon(level: string): { tier: string; nivel: number; color: string } {
+  const map: Record<string, { tier: string; nivel: number; color: string }> = {
+    APRENDIZ: { tier: "Bronce", nivel: 1, color: "text-mpd-amber" },
+    VERSADO: { tier: "Plata", nivel: 2, color: "text-mpd-gray" },
+    PROFESIONAL: { tier: "Oro", nivel: 3, color: "text-mpd-gold" },
+    EXPERTO: { tier: "Platino", nivel: 4, color: "text-mpd-white" },
+    MAESTRO: { tier: "Diamante", nivel: 5, color: "text-mpd-green" },
+  };
+  return map[level] ?? { tier: "Bronce", nivel: 1, color: "text-mpd-amber" };
+}
+
 export function getRoleLabel(role: string): string {
   const labels: Record<string, string> = {
     PLAYER: "Jugador",
