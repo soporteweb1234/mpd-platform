@@ -4,8 +4,8 @@ import { prisma } from "@/lib/prisma";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DataCard } from "@/components/shared/DataCard";
 import { Badge } from "@/components/ui/badge";
-import { formatCurrency } from "@/lib/utils";
-import { TrendingUp, CalendarDays, Percent, Trophy, Info, CheckCircle2, X } from "lucide-react";
+import { formatUSD } from "@/lib/utils";
+import { TrendingUp, CalendarDays, Trophy, Info, CheckCircle2 } from "lucide-react";
 import { EmptyState } from "@/components/shared/EmptyState";
 import { RakebackPdfButton } from "@/components/dashboard/RakebackPdfButton";
 import { RakebackChart } from "@/components/charts/RakebackBarChart";
@@ -29,8 +29,6 @@ export default async function RakebackPage() {
   ]);
 
   const totalRakeback = records.reduce((sum, r) => sum + r.rakebackAmount, 0);
-  const totalRake = records.reduce((sum, r) => sum + r.rakeGenerated, 0);
-  const avgPercent = totalRake > 0 ? (totalRakeback / totalRake) * 100 : 0;
 
   // Rakeback del mes en curso (período cuyo inicio cae dentro del mes actual)
   const now = new Date();
@@ -101,14 +99,14 @@ export default async function RakebackPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         <DataCard
-          title="Rakeback Total"
+          title="Histórico ganado total"
           value={totalRakeback}
           format="currency"
           icon={<TrendingUp className="h-5 w-5" />}
           color="gold"
-          subtitle="Acumulado desde tu registro"
+          subtitle="Total aproximado de rakeback generado desde tu registro. Puede excluir bonificaciones."
         />
         <DataCard
           title="Rakeback Este Mes"
@@ -117,14 +115,6 @@ export default async function RakebackPage() {
           icon={<CalendarDays className="h-5 w-5" />}
           color="green"
           subtitle={now.toLocaleDateString("es-ES", { month: "long", year: "numeric" })}
-        />
-        <DataCard
-          title="% Medio Rakeback"
-          value={avgPercent}
-          format="percent"
-          icon={<Percent className="h-5 w-5" />}
-          color="white"
-          subtitle="Sobre el NGR total generado"
         />
         <Card className="hover:border-mpd-border-light transition-colors">
           <CardContent className="p-5">
@@ -139,7 +129,7 @@ export default async function RakebackPage() {
             </p>
             <p className="text-[11px] text-mpd-gray-dark mt-1 leading-snug">
               {topRoom
-                ? `${formatCurrency(topRoom.amount)} de rakeback generado`
+                ? `${formatUSD(topRoom.amount)} de rakeback generado`
                 : "Sin datos todavía"}
             </p>
           </CardContent>
@@ -169,58 +159,15 @@ export default async function RakebackPage() {
             <Info className="h-5 w-5 text-mpd-gold shrink-0 mt-0.5" />
             <div>
               <h3 className="font-medium text-mpd-white mb-1">¿Qué es el Rakeback NGR?</h3>
-              <p className="text-sm text-mpd-gray">
-                Rakeback NGR (Net Gaming Revenue): porcentaje de excedente que queda tras descontar lo que la sala ha dado previamente y de forma directa al jugador. Es la base real sobre la que se calcula tu rakeback en MPD.
+              <p className="text-sm text-mpd-gray leading-relaxed">
+                <span className="font-medium text-mpd-white">Rakeback NGR (Net Gaming Revenue):</span> es el porcentaje de excedente de comisiones que queda tras los descuentos que la sala ha aplicado internamente y de forma directa al jugador en forma de rakeback interno, bonos de bienvenida, retiros, jackpot, etc. Es la base reguladora sobre la que se calcula tu rakeback externo a percibir por parte de MPD.
               </p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Comparison Table */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Sin MPD vs Con MPD</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-mpd-border">
-                  <th className="text-left py-3 px-3 text-mpd-gray font-medium">Sin MPD</th>
-                  <th className="text-left py-3 px-3 text-mpd-gold font-medium">Con MPD</th>
-                </tr>
-              </thead>
-              <tbody>
-                {[
-                  { without: "Rakeback estándar de sala", with: "Rakeback negociado superior" },
-                  { without: "Sin acceso a herramientas con descuento", with: "Herramientas a precio de grupo" },
-                  { without: "Sin comunidad", with: "Comunidad activa y retroalimentación" },
-                  { without: "Sin coaching", with: "Acceso a sesiones de estudio" },
-                  { without: "Sin gestión", with: "MPD resuelve todo lo demás" },
-                ].map((row, i) => (
-                  <tr key={i} className="border-b border-mpd-border/50">
-                    <td className="py-3 px-3 text-mpd-gray">
-                      <span className="flex items-center gap-2">
-                        <X className="h-3.5 w-3.5 text-mpd-red shrink-0" />
-                        {row.without}
-                      </span>
-                    </td>
-                    <td className="py-3 px-3 text-mpd-white">
-                      <span className="flex items-center gap-2">
-                        <CheckCircle2 className="h-3.5 w-3.5 text-mpd-green shrink-0" />
-                        {row.with}
-                      </span>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Transparencia de Cálculo */}
+      {/* Transparencia de Cálculo — 4 pasos */}
       <Card>
         <CardHeader>
           <CardTitle className="text-base">¿Cómo se calcula tu rakeback?</CardTitle>
@@ -229,24 +176,43 @@ export default async function RakebackPage() {
           <div className="space-y-3 text-sm text-mpd-gray">
             <div className="flex items-start gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">1</span>
-              <p><span className="text-mpd-white font-medium">Rake generado:</span> cada vez que juegas, la sala cobra una comisión (rake). Este dato se importa directamente desde la sala.</p>
+              <p>
+                <span className="text-mpd-white font-medium">Rake generado:</span> cada vez que
+                juegas, la sala cobra una comisión (rake). Este dato se importa directamente
+                desde la sala.
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">2</span>
-              <p><span className="text-mpd-white font-medium">NGR (Net Gaming Revenue):</span> al rake generado se le restan las bonificaciones y promociones que la sala te haya dado directamente. El resultado es el NGR.</p>
+              <p>
+                <span className="text-mpd-white font-medium">NGR (Net Gaming Revenue):</span> es
+                el neto del rake generado bruto, descontando el rakeback interno percibido,
+                bonificaciones y/o promociones que la sala te haya dado o cobrado directa o
+                indirectamente. El resultado es el NGR.
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">3</span>
-              <p><span className="text-mpd-white font-medium">Porcentaje negociado:</span> MPD aplica sobre el NGR el porcentaje de rakeback negociado con cada sala. Este % es superior al estándar gracias a nuestros acuerdos.</p>
+              <p>
+                <span className="text-mpd-white font-medium">Porcentaje negociado:</span> MPD
+                aplica sobre el NGR un porcentaje de rakeback negociado con cada sala y te lo
+                devuelve de forma directa. Este % es superior al estándar gracias a nuestros
+                acuerdos.
+              </p>
             </div>
             <div className="flex items-start gap-3">
               <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-mpd-gold/10 text-mpd-gold text-xs font-bold">4</span>
-              <p><span className="text-mpd-white font-medium">Tu rakeback:</span> el resultado se acumula como saldo en tu cuenta MPD. Puedes usarlo en servicios o solicitar retiro.</p>
+              <p>
+                <span className="text-mpd-white font-medium">Tu rakeback:</span> el resultado se
+                acumula como saldo disponible en tu cuenta MPD. Puedes solicitar su retiro o
+                aprovecharlo para beneficiarte de servicios con descuento MPD.
+              </p>
             </div>
           </div>
           <div className="mt-4 p-3 rounded-lg bg-mpd-black/50 border border-mpd-border">
-            <p className="text-xs text-mpd-gray-dark">
-              Los datos se actualizan periódicamente según los reportes de cada sala. Si tienes dudas sobre algún cálculo específico, contacta con soporte.
+            <p className="text-xs text-mpd-gray-dark italic">
+              Los datos se actualizan periódicamente según los reportes de cada sala. Si tienes
+              dudas sobre algún cálculo específico, contacta con soporte.
             </p>
           </div>
         </CardContent>
@@ -275,9 +241,9 @@ export default async function RakebackPage() {
                     <tr key={r.id} className="border-b border-mpd-border/50 hover:bg-mpd-surface-hover/50">
                       <td className="py-3 px-2 text-mpd-white">{r.period}</td>
                       <td className="py-3 px-2 text-mpd-white">{r.room.name}</td>
-                      <td className="py-3 px-2 text-right font-mono text-mpd-white">{formatCurrency(r.rakeGenerated)}</td>
+                      <td className="py-3 px-2 text-right font-mono text-mpd-white">{formatUSD(r.rakeGenerated)}</td>
                       <td className="py-3 px-2 text-right font-mono text-mpd-gray">{r.rakebackPercent.toFixed(1)}%</td>
-                      <td className="py-3 px-2 text-right font-mono text-mpd-green font-medium">{formatCurrency(r.rakebackAmount)}</td>
+                      <td className="py-3 px-2 text-right font-mono text-mpd-green font-medium">{formatUSD(r.rakebackAmount)}</td>
                       <td className="py-3 px-2 text-center">
                         <Badge variant={statusColors[r.status] as "default" | "success" | "warning" | "destructive" | "secondary"}>
                           {statusLabels[r.status] ?? r.status}
